@@ -1,0 +1,6 @@
+@SWEN3_Paperless_HostAddress = http://localhost:5293
+
+GET {{SWEN3_Paperless_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
