@@ -1,0 +1,24 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: paperless
+      POSTGRES_PASSWORD: paperless
+      POSTGRES_DB: paperless
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  rest:
+    build: ./PaperlessRest
+    ports:
+      - "8081:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
