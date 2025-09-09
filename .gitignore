@@ -1,0 +1,62 @@
+# Build-Resultate
+bin/
+obj/
+out/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# Rider/VSCode/Visual Studio
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+
+# Paket-Manager
+*.nupkg
+*.snupkg
+packages/
+*.nuspec
+
+# NuGet
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Cache / temporär
+*.tmp
+*.temp
+*.pidb
+*.svclog
+*.pid
+*.cache
+*.dbmdl
+
+# Publishes
+publish/
+AppPackages/
+BundleArtifacts/
+
+# User secrets / sensitive Daten
+secrets.json
+
+# Entity Framework
+Migrations/
+
+# Sonstige Tools
+_ReSharper*/
+*.DotSettings.user
+*.DotSettings
+
+# Visual Studio Code Coverage
+*.coverage
+*.coveragexml
+TestResult*/
