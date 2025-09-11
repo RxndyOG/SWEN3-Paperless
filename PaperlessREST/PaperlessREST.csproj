@@ -1,17 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <!-- hard exclude non-C# files that sometimes get globbed -->
   <ItemGroup>
-    <None Remove="Dockerfile" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Dockerfile" />
+    <Compile Remove="Dockerfile" />
+    <Compile Remove="**/Dockerfile" />
+    <Compile Remove="docker-compose.yml" />
+    <Compile Remove="**/*.yml" />
+    <Compile Remove="**/*.yaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,5 +22,4 @@
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8" />
   </ItemGroup>
-
 </Project>

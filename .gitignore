@@ -11,6 +11,7 @@ x86/
 
 # Rider/VSCode/Visual Studio
 .vscode/
+.vs/
 .idea/
 *.suo
 *.user
