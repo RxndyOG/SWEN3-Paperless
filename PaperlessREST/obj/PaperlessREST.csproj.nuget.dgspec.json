@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\PaperlessREST.csproj": {}
+    "C:\\Technikum\\Semester_5\\Swen\\Proj\\SWEN3-Paperless\\PaperlessREST\\PaperlessREST.csproj": {}
   },
   "projects": {
-    "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\PaperlessREST.csproj": {
+    "C:\\Technikum\\Semester_5\\Swen\\Proj\\SWEN3-Paperless\\PaperlessREST\\PaperlessREST.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\PaperlessREST.csproj",
+        "projectUniqueName": "C:\\Technikum\\Semester_5\\Swen\\Proj\\SWEN3-Paperless\\PaperlessREST\\PaperlessREST.csproj",
         "projectName": "PaperlessREST",
-        "projectPath": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\PaperlessREST.csproj",
-        "packagesPath": "C:\\Users\\Stefan\\.nuget\\packages\\",
-        "outputPath": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\obj\\",
+        "projectPath": "C:\\Technikum\\Semester_5\\Swen\\Proj\\SWEN3-Paperless\\PaperlessREST\\PaperlessREST.csproj",
+        "packagesPath": "C:\\Users\\mholz\\.nuget\\packages\\",
+        "outputPath": "C:\\Technikum\\Semester_5\\Swen\\Proj\\SWEN3-Paperless\\PaperlessREST\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "D:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Stefan\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\mholz\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
