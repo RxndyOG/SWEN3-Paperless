@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\PaperlessREST.csproj": {}
+    "D:\\FHTechnikum\\Semester 5\\SWEN\\SWEN\\PaperlessREST\\PaperlessREST.csproj": {}
   },
   "projects": {
-    "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\PaperlessREST.csproj": {
+    "D:\\FHTechnikum\\Semester 5\\SWEN\\SWEN\\PaperlessREST\\PaperlessREST.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\PaperlessREST.csproj",
+        "projectUniqueName": "D:\\FHTechnikum\\Semester 5\\SWEN\\SWEN\\PaperlessREST\\PaperlessREST.csproj",
         "projectName": "PaperlessREST",
-        "projectPath": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\PaperlessREST.csproj",
-        "packagesPath": "C:\\Users\\mholz\\.nuget\\packages\\",
-        "outputPath": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\obj\\",
+        "projectPath": "D:\\FHTechnikum\\Semester 5\\SWEN\\SWEN\\PaperlessREST\\PaperlessREST.csproj",
+        "packagesPath": "C:\\Users\\stefa\\.nuget\\packages\\",
+        "outputPath": "D:\\FHTechnikum\\Semester 5\\SWEN\\SWEN\\PaperlessREST\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\mholz\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\stefa\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,6 +26,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -43,8 +44,7 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -62,7 +62,7 @@
             },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[9.0.4, )"
             }
           },
           "imports": [
@@ -84,7 +84,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.400/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
