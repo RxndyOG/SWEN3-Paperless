@@ -3,8 +3,11 @@
 public class Document
 {
     public int Id { get; set; }
-    public string FileName { get; set; } = string.Empty;
-    public string Content { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string Name { get; set; }
+    public string Path { get; set; }
+    public string MimeType { get; set; }
+    public long SizeBytes { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
 }
 
