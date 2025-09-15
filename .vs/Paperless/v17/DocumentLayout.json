@@ -1,37 +1,45 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\",
+  "WorkspaceRootPath": "D:\\Gittest\\SWEN3-Paperless\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|f:\\fhtechnikum\\semester 5\\swen\\paperless\\paperlessrest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|f:\\fhtechnikum\\semester 5\\swen\\paperless\\paperlessrest\\controllers\\documentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\controllers\\documentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|f:\\fhtechnikum\\semester 5\\swen\\paperless\\paperlessrest\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|f:\\fhtechnikum\\semester 5\\swen\\paperless\\paperlessrest\\models\\document.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\models\\document.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|f:\\fhtechnikum\\semester 5\\swen\\paperless\\paperlessrest\\paperlessrest.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\paperlessrest.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|Solution Items{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|Solution Items{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|solutionrelative:docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|f:\\fhtechnikum\\semester 5\\swen\\paperless\\paperlessrest\\dockerfile||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|d:\\gittest\\swen3-paperless\\paperlessrest\\dockerfile||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\dockerfile||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|f:\\fhtechnikum\\semester 5\\swen\\paperless\\paperlessrest\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|d:\\gittest\\swen3-paperless\\paperlessrest\\controllers\\documentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\controllers\\documentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|d:\\gittest\\swen3-paperless\\paperlessrest\\controllers\\pingcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\controllers\\pingcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|d:\\gittest\\swen3-paperless\\paperlessrest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|d:\\gittest\\swen3-paperless\\paperlessrest\\dockerfile||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\dockerfile||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|d:\\gittest\\swen3-paperless\\paperlessrest\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|d:\\gittest\\swen3-paperless\\paperlessrest\\models\\document.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\models\\document.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|d:\\gittest\\swen3-paperless\\paperlessrest\\paperlessrest.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\paperlessrest.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|Solution Items{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|D:\\Gittest\\SWEN3-Paperless\\docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|Solution Items{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|solutionrelative:docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|d:\\gittest\\swen3-paperless\\paperlessrest\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     }
   ],
@@ -42,56 +50,67 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "docker-compose.yml",
-              "DocumentMoniker": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\docker-compose.yml",
-              "RelativeDocumentMoniker": "docker-compose.yml",
-              "ToolTip": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\docker-compose.yml",
-              "RelativeToolTip": "docker-compose.yml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003775|",
-              "WhenOpened": "2025-09-09T18:51:52.175Z",
+              "DocumentIndex": 2,
+              "Title": "PingController.cs",
+              "DocumentMoniker": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Controllers\\PingController.cs",
+              "RelativeDocumentMoniker": "PaperlessREST\\Controllers\\PingController.cs",
+              "ToolTip": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Controllers\\PingController.cs",
+              "RelativeToolTip": "PaperlessREST\\Controllers\\PingController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-15T12:49:12.584Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 8,
+              "Title": "docker-compose.yml",
+              "DocumentMoniker": "D:\\Gittest\\SWEN3-Paperless\\docker-compose.yml",
+              "RelativeDocumentMoniker": "docker-compose.yml",
+              "ToolTip": "D:\\Gittest\\SWEN3-Paperless\\docker-compose.yml",
+              "RelativeToolTip": "docker-compose.yml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003775|",
+              "WhenOpened": "2025-09-09T18:51:52.175Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
               "Title": "Dockerfile",
-              "DocumentMoniker": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\Dockerfile",
+              "DocumentMoniker": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Dockerfile",
               "RelativeDocumentMoniker": "PaperlessREST\\Dockerfile",
-              "ToolTip": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\Dockerfile",
+              "ToolTip": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Dockerfile",
               "RelativeToolTip": "PaperlessREST\\Dockerfile",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAApAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAswAoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2025-09-09T18:51:09.929Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 9,
               "Title": "appsettings.json",
-              "DocumentMoniker": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\appsettings.json",
+              "DocumentMoniker": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\appsettings.json",
               "RelativeDocumentMoniker": "PaperlessREST\\appsettings.json",
-              "ToolTip": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\appsettings.json",
+              "ToolTip": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\appsettings.json",
               "RelativeToolTip": "PaperlessREST\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-09-09T18:50:34.137Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T18:50:34.137Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
               "Title": "Program.cs",
-              "DocumentMoniker": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\Program.cs",
+              "DocumentMoniker": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Program.cs",
               "RelativeDocumentMoniker": "PaperlessREST\\Program.cs",
-              "ToolTip": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\Program.cs",
+              "ToolTip": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Program.cs",
               "RelativeToolTip": "PaperlessREST\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAVAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-09T18:50:05.321Z",
               "EditorCaption": ""
@@ -100,71 +119,63 @@
               "$type": "Document",
               "DocumentIndex": 1,
               "Title": "DocumentsController.cs",
-              "DocumentMoniker": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\Controllers\\DocumentsController.cs",
+              "DocumentMoniker": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Controllers\\DocumentsController.cs",
               "RelativeDocumentMoniker": "PaperlessREST\\Controllers\\DocumentsController.cs",
-              "ToolTip": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\Controllers\\DocumentsController.cs",
+              "ToolTip": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Controllers\\DocumentsController.cs",
               "RelativeToolTip": "PaperlessREST\\Controllers\\DocumentsController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAPAAAAAAAAAA==",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAQwBkAAABJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-09T18:49:45.542Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
+              "Title": "Dockerfile",
+              "DocumentMoniker": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Dockerfile",
+              "RelativeDocumentMoniker": "PaperlessREST\\Dockerfile",
+              "ToolTip": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Dockerfile",
+              "RelativeToolTip": "PaperlessREST\\Dockerfile",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-09-15T12:50:07.416Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
               "Title": "AppDbContext.cs",
-              "DocumentMoniker": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\Data\\AppDbContext.cs",
+              "DocumentMoniker": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Data\\AppDbContext.cs",
               "RelativeDocumentMoniker": "PaperlessREST\\Data\\AppDbContext.cs",
-              "ToolTip": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\Data\\AppDbContext.cs",
+              "ToolTip": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Data\\AppDbContext.cs",
               "RelativeToolTip": "PaperlessREST\\Data\\AppDbContext.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T18:48:20.406Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T18:48:20.406Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "Document.cs",
-              "DocumentMoniker": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\Models\\Document.cs",
+              "DocumentMoniker": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Models\\Document.cs",
               "RelativeDocumentMoniker": "PaperlessREST\\Models\\Document.cs",
-              "ToolTip": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\Models\\Document.cs",
+              "ToolTip": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\Models\\Document.cs",
               "RelativeToolTip": "PaperlessREST\\Models\\Document.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T18:47:31.404Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T18:47:31.404Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "PaperlessREST",
-              "DocumentMoniker": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\PaperlessREST.csproj",
+              "DocumentIndex": 7,
+              "Title": "PaperlessREST.csproj",
+              "DocumentMoniker": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\PaperlessREST.csproj",
               "RelativeDocumentMoniker": "PaperlessREST\\PaperlessREST.csproj",
-              "ToolTip": "F:\\FHTechnikum\\Semester 5\\SWEN\\Paperless\\PaperlessREST\\PaperlessREST.csproj",
+              "ToolTip": "D:\\Gittest\\SWEN3-Paperless\\PaperlessREST\\PaperlessREST.csproj",
               "RelativeToolTip": "PaperlessREST\\PaperlessREST.csproj",
               "ViewState": "AgIAAAkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-09-09T18:45:29.873Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
-            }
-          ]
-        },
-        {
-          "DockedWidth": 1498,
-          "SelectedChildIndex": -1,
-          "Children": [
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+              "WhenOpened": "2025-09-09T18:45:29.873Z"
             }
           ]
         }

@@ -1,14 +1,14 @@
-using Microsoft.EntityFrameworkCore;
-using PaperlessREST.Data;
-
+// Program.cs
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers(); // if you’re using Controllers
+// builder.Services.AddEndpointsApiExplorer(); builder.Services.AddSwaggerGen(); // optional
 
-// PostgreSQL Connection
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddControllers();
 var app = builder.Build();
 
-app.MapControllers();
+// Comment this line if you won't set up certs in the container
+// app.UseHttpsRedirection();
+
+app.MapControllers(); // or define minimal APIs
+
+// Respect ASPNETCORE_URLS (set in Docker)
 app.Run();
