@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   postgres:
     image: postgres:15
@@ -10,17 +9,23 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d paperless"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   rest:
     build: ./PaperlessRest
     ports:
       - "5281:8080"
     environment:
-    - ASPNETCORE_URLS=http://+:8080
-    - ASPNETCORE_ENVIRONMENT=Production
-    - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=paperless;Username=test;Password=fhtw
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=paperless;Username=test;Password=fhtw
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:
