@@ -48,7 +48,7 @@ public class DocumentsController : ControllerBase
     [HttpGet("{id:int}")]
     public IActionResult GetDocById(int id) => Ok(_db.Documents.Find(id));
 
-    [HttpDelete("{id:int")]
+    [HttpDelete("{id:int}")]
     public IActionResult DeleteDocById(int id)
     {
         var doc = _db.Documents.Find(id);
