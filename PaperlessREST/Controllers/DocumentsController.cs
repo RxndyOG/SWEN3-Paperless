@@ -47,4 +47,19 @@ public class DocumentsController : ControllerBase
 
     [HttpGet("{id:int}")]
     public IActionResult GetDocById(int id) => Ok(_db.Documents.Find(id));
+
+    [HttpDelete("{id:int")]
+    public IActionResult DeleteDocById(int id)
+    {
+        var doc = _db.Documents.Find(id);
+        if (doc == null)
+            return NotFound();
+        _db.Documents.Remove(doc);
+
+        int changes = _db.SaveChanges();
+        if (changes == 0)
+            return BadRequest("error occured while deleting a document");
+
+        return Ok("successfully removed");
+    }
 }

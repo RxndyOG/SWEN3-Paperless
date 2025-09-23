@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Crypto;
 using PaperlessREST.Controllers;
 using PaperlessREST.Data;
 using PaperlessREST.Models;
@@ -63,6 +64,8 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
         int id;
         using (var db = NewDb())
         {
+            CleanDocuments(db);
+
             var doc = new Document
             {
                 FileName = "old.pdf",
@@ -102,6 +105,8 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
         int id;
         using (var db = NewDb())
         {
+            CleanDocuments(db);
+
             var docs = new List<Document>
             { new Document { FileName = "test1", Content = "dummyContent", CreatedAt = DateTime.UtcNow },
             new Document { FileName = "this should be returned", Content = "this is the content", CreatedAt= DateTime.UtcNow },
@@ -134,6 +139,52 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
     }
 
     [Fact]
+    public async Task InsertDocumentThenDeleteShouldReturnOk()
+    {
+        //Arrange
+        int id;
+        using (var db = NewDb())
+        {
+            CleanDocuments(db);
+            var docs = new List<Document>
+            { new Document { FileName = "test1", Content = "dummyContent", CreatedAt = DateTime.UtcNow },
+            new Document { FileName = "this should be deleted", Content = "this is the content", CreatedAt= DateTime.UtcNow },
+            new Document { FileName = "blah", Content = "blah", CreatedAt = DateTime.UtcNow}
+            };
+            foreach (var doc in docs)
+            {
+                db.Documents.Add(doc);
+            }
+            await db.SaveChangesAsync();
+            id = docs[1].Id;
+        }
+
+        // Act
+        IActionResult deleteResult;
+        List<Document> documentList;
+
+        using (var db = NewDb())
+        {
+            var controller = new DocumentsController(db);
+
+            // Call DELETE
+            deleteResult = controller.DeleteDocById(id);
+
+            // Call GET ALL
+            var getAllResult = controller.GetAll();
+
+            // unwrap OkObjectResult and get the list
+            var okObject = Assert.IsType<OkObjectResult>(getAllResult);
+            documentList = Assert.IsAssignableFrom<List<Document>>(okObject.Value);
+        }
+
+        // Assert
+        Assert.IsType<OkObjectResult>(deleteResult);
+        Assert.Equal(2, documentList.Count);
+        Assert.DoesNotContain(documentList, d => d.Id == id);
+    }
+
+    [Fact]
     public void UpdateDocument_Should_Return_NotFound_When_Id_Does_Not_Exist()
     {
         using var db = NewDb();
@@ -144,5 +195,18 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
         var result = controller.UpdateDocument(999999, dto);
 
         Assert.IsType<NotFoundResult>(result);
+    }
+
+    static void CleanDocuments(AppDbContext db)
+    {
+        // Ensure schema exists (and migrations are applied) before truncating
+        db.Database.Migrate();
+
+        var et = db.Model.FindEntityType(typeof(Document))!;
+        var schema = et.GetSchema() ?? "public";
+        var table = et.GetTableName()!; // EF’s actual table name
+
+        // Quote identifiers to work with any casing
+        db.Database.ExecuteSqlRaw($@"TRUNCATE TABLE ""{schema}"".""{table}"" RESTART IDENTITY CASCADE");
     }
 }
