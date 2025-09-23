@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest.tests\\postgres.fixture.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|solutionrelative:paperlessrest.tests\\postgres.fixture.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest.tests\\documenttests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|solutionrelative:paperlessrest.tests\\documenttests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest.tests\\unittest1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|solutionrelative:paperlessrest.tests\\unittest1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest.tests\\postgres.fixture.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|solutionrelative:paperlessrest.tests\\postgres.fixture.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -46,7 +46,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -58,26 +58,26 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Postgres.Fixture.cs",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\Postgres.Fixture.cs",
               "RelativeDocumentMoniker": "PaperlessREST.Tests\\Postgres.Fixture.cs",
-              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\Postgres.Fixture.cs*",
-              "RelativeToolTip": "PaperlessREST.Tests\\Postgres.Fixture.cs*",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAVAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\Postgres.Fixture.cs",
+              "RelativeToolTip": "PaperlessREST.Tests\\Postgres.Fixture.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-21T19:50:30.344Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "UnitTest1.cs",
-              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\UnitTest1.cs",
-              "RelativeDocumentMoniker": "PaperlessREST.Tests\\UnitTest1.cs",
-              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\UnitTest1.cs",
-              "RelativeToolTip": "PaperlessREST.Tests\\UnitTest1.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "DocumentTests.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\DocumentTests.cs",
+              "RelativeDocumentMoniker": "PaperlessREST.Tests\\DocumentTests.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\DocumentTests.cs",
+              "RelativeToolTip": "PaperlessREST.Tests\\DocumentTests.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-21T19:50:09.258Z",
               "EditorCaption": ""

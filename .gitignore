@@ -48,6 +48,7 @@ BundleArtifacts/
 
 # User secrets / sensitive Daten
 secrets.json
+appsettings.json
 
 # Entity Framework
 Migrations/
