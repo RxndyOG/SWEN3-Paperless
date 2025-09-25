@@ -17,6 +17,7 @@ x86/
 *.user
 *.userosscache
 *.sln.docstates
+.node_modules/
 
 # Logs
 *.log
