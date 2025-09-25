@@ -27,5 +27,12 @@ services:
       postgres:
         condition: service_healthy
 
+  web:
+    build: ./PaperlessUI
+    ports:
+      - "8080:80"
+    depends_on:
+      - rest
+
 volumes:
   postgres_data:
