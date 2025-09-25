@@ -18,6 +18,13 @@ x86/
 *.userosscache
 *.sln.docstates
 
+# Angular UI ignores
+PaperlessUI/node_modules/
+PaperlessUI/dist/
+PaperlessUI/.angular/
+PaperlessUI/.vscode/
+
+
 # Logs
 *.log
 
