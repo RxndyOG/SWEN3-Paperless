@@ -12,7 +12,7 @@ import { JsonPipe } from '@angular/common';
     <button (click)="testApi()">Test API</button>
     <pre>{{ result | json }}</pre>
   `,
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit {
   private http = inject(HttpClient);

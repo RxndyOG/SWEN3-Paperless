@@ -7,6 +7,10 @@
       "RelativeMoniker": "D:0:0:{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|Solution Items{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|solutionrelative:docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\besitzer\\source\\repos\\swen3-paperless\\paperlessrest\\dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\besitzer\\source\\repos\\swen3-paperless\\paperlessrest\\controllers\\documentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\controllers\\documentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -26,7 +30,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -38,20 +42,32 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Dockerfile",
+              "DocumentMoniker": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Dockerfile",
+              "RelativeDocumentMoniker": "PaperlessREST\\Dockerfile",
+              "ToolTip": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Dockerfile",
+              "RelativeToolTip": "PaperlessREST\\Dockerfile",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-09-25T08:46:51.928Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
               "Title": "docker-compose.yml",
               "DocumentMoniker": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\docker-compose.yml",
               "RelativeDocumentMoniker": "docker-compose.yml",
               "ToolTip": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\docker-compose.yml",
               "RelativeToolTip": "docker-compose.yml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAABYAAAAkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003775|",
               "WhenOpened": "2025-09-22T07:36:04.791Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Program.cs",
               "RelativeDocumentMoniker": "PaperlessREST\\Program.cs",
@@ -59,12 +75,11 @@
               "RelativeToolTip": "PaperlessREST\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAA+AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-15T13:50:30.435Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-15T13:50:30.435Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "Document.cs",
               "DocumentMoniker": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Models\\Document.cs",
               "RelativeDocumentMoniker": "PaperlessREST\\Models\\Document.cs",
@@ -76,7 +91,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "DocumentsController.cs",
               "DocumentMoniker": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Controllers\\DocumentsController.cs",
               "RelativeDocumentMoniker": "PaperlessREST\\Controllers\\DocumentsController.cs",
@@ -84,8 +99,7 @@
               "RelativeToolTip": "PaperlessREST\\Controllers\\DocumentsController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACUAAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-11T07:12:55.433Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-11T07:12:55.433Z"
             }
           ]
         },
