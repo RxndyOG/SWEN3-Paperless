@@ -15,6 +15,21 @@ services:
       timeout: 5s
       retries: 20
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # messaging port (for your REST/OCR services)
+      - "15672:15672"  # management UI (open in browser)
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: pass
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   rest:
     build: ./PaperlessRest
     ports:
@@ -23,8 +38,13 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=paperless;Username=test;Password=fhtw
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__User: user
+      RabbitMQ__Pass: pass
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   web:

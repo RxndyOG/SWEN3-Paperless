@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using PaperlessREST.Data;
 using PaperlessREST.Models;
+using PaperlessREST.Services;
 
 namespace PaperlessREST.Controllers;
 
@@ -19,13 +20,19 @@ public class DocumentsController : ControllerBase
     [HttpGet]
     public IActionResult GetAll() => Ok(_db.Documents.ToList());
 
+
     [HttpPost]
-    public IActionResult Create([FromBody] Document doc)
+    public IActionResult Create([FromBody] Document doc, [FromServices] MessageQueueService mq)
     {
         _db.Documents.Add(doc);
         _db.SaveChanges();
+
+        // Send message to RabbitMQ
+        mq.Publish($"New document uploaded: {doc.FileName} (ID: {doc.Id})");
+
         return CreatedAtAction(nameof(GetAll), new { id = doc.Id }, doc);
     }
+
 
     [HttpPut("{id:int}")]
     public IActionResult UpdateDocument(int id, [FromBody] Document newDoc)
