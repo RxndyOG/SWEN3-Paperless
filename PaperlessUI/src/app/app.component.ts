@@ -59,6 +59,36 @@ export class AppComponent implements OnInit {
     }
   }
 
+  // Spoof helper for testing UI without calling the backend
+  addFakeDocument(): void {
+    // Create minimal JSON payload (no Id - server will generate it)
+    const payload = {
+      fileName: `FakeDocument_${Date.now()}.pdf`,
+      content: 'This is a fake document used for UI testing. It contains sample text to exercise search and listing features.',
+      createdAt: new Date().toISOString()
+    } as Partial<Document>;
+
+    this.isUploading = true;
+    this.uploadStatus = 'Posting fake document...';
+
+    this.http.post<Document>('/api/documents', payload).subscribe({
+      next: (created) => {
+        // Insert server-returned document at front
+        this.documents = [created, ...this.documents];
+        this.filteredDocuments = [created, ...this.filteredDocuments];
+        this.currentView = 'documents';
+        this.uploadStatus = `Added document: ${created.fileName}`;
+        this.isUploading = false;
+        setTimeout(() => this.uploadStatus = '', 3000);
+      },
+      error: (err) => {
+        this.isUploading = false;
+        this.uploadStatus = `Failed to add fake document: ${err?.message ?? err}`;
+        setTimeout(() => this.uploadStatus = '', 4000);
+      }
+    });
+  }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {

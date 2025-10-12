@@ -146,12 +146,8 @@ body {
 }
 
 /* Adjust main content when status is shown */
-.main-content {
-  margin-top: 60px;
-  padding: 20px;
-  transition: margin-left 0.3s ease, margin-top 0.3s ease;
-  min-height: calc(100vh - 60px);
-}
+/* Adjust main content when status is shown */
+/* (styles defined later) */
 
 /* Drop Zone */
 .drop-zone {

@@ -30,6 +30,17 @@ services:
       timeout: 5s
       retries: 5
 
+  ocrworker:
+    build: ./PaperlessOCR
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: user
+      RABBITMQ_PASS: pass
+      RABBITMQ_QUEUE: documents
+
   rest:
     build: ./PaperlessRest
     ports:

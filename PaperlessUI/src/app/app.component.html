@@ -12,6 +12,10 @@
       <span class="loading-spinner" *ngIf="isUploading"></span>
       {{ isUploading ? 'Uploading...' : 'Add Document' }}
     </button>
+    <!-- Spoof add document for testing -->
+    <button class="add-fake-btn" (click)="addFakeDocument()" title="Add fake document for testing">
+      ➕ Fake
+    </button>
     
     <!-- Hidden file input -->
     <input type="file" 
