@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 using System.Text;
 
 public class RabbitConsumerService : BackgroundService
@@ -19,39 +20,54 @@ public class RabbitConsumerService : BackgroundService
         _opts = opts.Value;
     }
 
-    public override Task StartAsync(System.Threading.CancellationToken cancellationToken)
+    public override async Task StartAsync(System.Threading.CancellationToken cancellationToken)
     {
-        var factory = new ConnectionFactory
+        try
         {
-            HostName = _opts.Host,
-            UserName = _opts.User,
-            Password = _opts.Pass,
-            DispatchConsumersAsync = true
-        };
+            var factory = new ConnectionFactory
+            {
+                HostName = _opts.Host,
+                UserName = _opts.User,
+                Password = _opts.Pass,
+                DispatchConsumersAsync = true
+            };
 
-        _conn = factory.CreateConnection();
-        _channel = _conn.CreateModel();
+            _conn = factory.CreateConnection();
+            _channel = _conn.CreateModel();
 
-        // Declare the queue (must match the publisher)
-        _channel.QueueDeclare(
-            queue: _opts.QueueName,
-            durable: false,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null);
+            _channel.QueueDeclare(
+                queue: _opts.QueueName,
+                durable: false,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
 
-        // Prefetch 1 to keep it simple
-        _channel.BasicQos(0, 1, false);
+            _channel.BasicQos(0, 1, false);
 
-        _logger.LogInformation("Connected to RabbitMQ at {Host}. Listening on queue '{Queue}'",
-            _opts.Host, _opts.QueueName);
+            _logger.LogInformation("Connected to RabbitMQ at {Host}. Listening on queue '{Queue}'",
+                _opts.Host, _opts.QueueName);
+        }
+        catch (BrokerUnreachableException ex)
+        {
+            _logger.LogCritical(ex, "Could not reach RabbitMQ broker at {Host}", _opts.Host);
+            throw; // Let the host handle fatal startup errors
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical(ex, "Unexpected error during RabbitMQ startup");
+            throw;
+        }
 
-        return base.StartAsync(cancellationToken);
+        await base.StartAsync(cancellationToken);
     }
 
     protected override Task ExecuteAsync(System.Threading.CancellationToken stoppingToken)
     {
-        if (_channel is null) throw new InvalidOperationException("Channel not initialized.");
+        if (_channel is null)
+        {
+            _logger.LogCritical("RabbitMQ channel not initialized. Service cannot start.");
+            throw new InvalidOperationException("Channel not initialized.");
+        }
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
         consumer.Received += async (model, ea) =>
@@ -62,30 +78,54 @@ public class RabbitConsumerService : BackgroundService
                 var message = Encoding.UTF8.GetString(body);
                 _logger.LogInformation("Received message: {Message}", message);
 
-                // TODO: Plug OCR here later
+                //Plug OCR here later
 
-                // ack
                 _channel.BasicAck(ea.DeliveryTag, multiple: false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing message");
-                // reject but requeue (for now)
-                _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
+                _logger.LogError(ex, "Error processing message. DeliveryTag: {Tag}", ea.DeliveryTag);
+                //reject but requeue (for now)
+                try
+                {
+                    _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
+                }
+                catch (Exception nackEx)
+                {
+                    _logger.LogCritical(nackEx, "Failed to NACK message. DeliveryTag: {Tag}", ea.DeliveryTag);
+                }
             }
 
             await Task.CompletedTask;
         };
 
-        _channel.BasicConsume(queue: _opts.QueueName, autoAck: false, consumer: consumer);
+        try
+        {
+            _channel.BasicConsume(queue: _opts.QueueName, autoAck: false, consumer: consumer);
+            _logger.LogInformation("Started consuming queue '{Queue}'", _opts.QueueName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical(ex, "Failed to start consuming queue '{Queue}'", _opts.QueueName);
+            throw;
+        }
+
         return Task.CompletedTask;
     }
 
-    public override Task StopAsync(System.Threading.CancellationToken cancellationToken)
+    public override async Task StopAsync(System.Threading.CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Stopping consumer…");
-        _channel?.Close();
-        _conn?.Close();
-        return base.StopAsync(cancellationToken);
+        _logger.LogInformation("Stopping RabbitMQ consumer service...");
+        try
+        {
+            _channel?.Close();
+            _conn?.Close();
+            _logger.LogInformation("RabbitMQ connection and channel closed.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during RabbitMQ shutdown.");
+        }
+        await base.StopAsync(cancellationToken);
     }
 }
