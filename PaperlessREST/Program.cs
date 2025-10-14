@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PaperlessREST.Data;
+using PaperlessREST.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,8 +8,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddSingleton<MessageQueueService>();
+
 builder.Services.AddControllers();
 var app = builder.Build();
+
 
 using (var scope = app.Services.CreateScope())
 {

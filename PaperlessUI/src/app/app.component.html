@@ -7,12 +7,29 @@
       <span></span>
     </button>
     <h1 class="logo">Paperless</h1>
-    <button class="add-btn" (click)="addDocument()">
-      <span class="plus-icon">+</span>
-      Add Document
+    <button class="add-btn" (click)="addDocument()" [disabled]="isUploading">
+      <span class="plus-icon" *ngIf="!isUploading">+</span>
+      <span class="loading-spinner" *ngIf="isUploading"></span>
+      {{ isUploading ? 'Uploading...' : 'Add Document' }}
     </button>
+    <!-- Spoof add document for testing -->
+    <button class="add-fake-btn" (click)="addFakeDocument()" title="Add fake document for testing">
+      ➕ Fake
+    </button>
+    
+    <!-- Hidden file input -->
+    <input type="file" 
+           id="fileInput" 
+           accept=".pdf" 
+           (change)="onFileSelected($event)"
+           style="display: none;">
   </div>
 </header>
+
+<!-- Upload Status Banner -->
+<div class="upload-status" *ngIf="uploadStatus" [class.success]="uploadStatus.includes('success')" [class.error]="uploadStatus.includes('failed')">
+  {{ uploadStatus }}
+</div>
 
 <!-- Side Menu -->
 <nav class="side-menu" [class.open]="isMenuOpen">
@@ -21,7 +38,7 @@
       <span class="icon">🔍</span>
       Search
     </a>
-    <a href="#" class="menu-item">
+    <a href="#" class="menu-item" (click)="showAllDocuments()">
       <span class="icon">📁</span>
       All Documents
     </a>
@@ -51,36 +68,111 @@
 <!-- Main Content -->
 <main class="main-content" [class.menu-open]="isMenuOpen">
   <div class="content-area">
-    <div class="welcome-section">
-      <h2>Welcome to Paperless</h2>
-      <p>Manage your documents digitally and efficiently.</p>
+    
+    <!-- Home View -->
+    <div *ngIf="currentView === 'home'">
+      <div class="welcome-section">
+        <h2>Welcome to Paperless</h2>
+        <p>Manage your documents digitally and efficiently.</p>
+        
+        <!-- File Drop Zone -->
+        <div class="drop-zone" 
+             (dragover)="onDragOver($event)" 
+             (dragleave)="onDragLeave($event)"
+             (drop)="onFileDrop($event)"
+             [class.drag-over]="isDragOver">
+          <div class="drop-zone-content">
+            <div class="drop-icon">📁</div>
+            <p><strong>Drop PDF files here</strong></p>
+            <p>or click "Add Document" to browse</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <button class="action-card" (click)="addDocument()">
+          <div class="card-icon">📄</div>
+          <h3>Upload Document</h3>
+          <p>Add a new document to your collection</p>
+        </button>
+        
+        <button class="action-card" (click)="showAllDocuments()">
+          <div class="card-icon">📊</div>
+          <h3>View All Documents</h3>
+          <p>Browse your entire document collection</p>
+        </button>
+      </div>
+
+      <!-- API Test Section (for development) -->
+      <div class="api-test-section">
+        <button class="test-btn" (click)="testApi()">Test API Connection</button>
+        <pre class="api-result" *ngIf="result">{{ result | json }}</pre>
+      </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="quick-actions">
-      <button class="action-card" (click)="addDocument()">
-        <div class="card-icon">📄</div>
-        <h3>Upload Document</h3>
-        <p>Add a new document to your collection</p>
-      </button>
-      
-      <button class="action-card" (click)="searchDocuments()">
-        <div class="card-icon">🔍</div>
-        <h3>Search Documents</h3>
-        <p>Find documents in your collection</p>
-      </button>
-      
-      <button class="action-card">
-        <div class="card-icon">📊</div>
-        <h3>View Statistics</h3>
-        <p>See insights about your documents</p>
-      </button>
-    </div>
+    <!-- Documents View -->
+    <div *ngIf="currentView === 'documents'">
+      <div class="documents-header">
+        <div class="documents-title">
+          <button class="back-btn" (click)="showHome()">← Back</button>
+          <h2>Documents</h2>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="search-container">
+          <input type="text" 
+                 class="search-input"
+                 placeholder="Search by filename or content..."
+                 [(ngModel)]="searchQuery"
+                 (input)="onSearchInput($event)">
+          <span class="search-icon">🔍</span>
+        </div>
+      </div>
 
-    <!-- API Test Section (for development) -->
-    <div class="api-test-section">
-      <button class="test-btn" (click)="testApi()">Test API Connection</button>
-      <pre class="api-result" *ngIf="result">{{ result | json }}</pre>
+      <!-- Loading State -->
+      <div *ngIf="isLoadingDocuments" class="loading-state">
+        <div class="loading-spinner-large"></div>
+        <p>Loading documents...</p>
+      </div>
+
+      <!-- Documents List -->
+      <div *ngIf="!isLoadingDocuments" class="documents-grid">
+        <div *ngIf="filteredDocuments.length === 0 && documents.length === 0" class="empty-state">
+          <div class="empty-icon">📄</div>
+          <h3>No documents found</h3>
+          <p>Upload your first document to get started</p>
+          <button class="upload-btn" (click)="addDocument()">Upload Document</button>
+        </div>
+
+        <div *ngIf="filteredDocuments.length === 0 && documents.length > 0" class="no-results">
+          <div class="empty-icon">🔍</div>
+          <h3>No results found</h3>
+          <p>Try adjusting your search terms</p>
+        </div>
+
+        <div *ngFor="let doc of filteredDocuments" class="document-card">
+          <div class="document-header">
+            <div class="document-icon">📄</div>
+            <div class="document-info">
+              <h3 class="document-title">{{ doc.fileName }}</h3>
+              <p class="document-author">PDF Document</p>
+              <p class="document-meta">
+                {{ formatDate(doc.createdAt) }}
+              </p>
+            </div>
+          </div>
+          
+          <div class="document-actions">
+            <button class="action-btn download" (click)="downloadDocument(doc)" title="Download">
+              ⬇️
+            </button>
+            <button class="action-btn delete" (click)="deleteDocument(doc)" title="Delete">
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </main>

@@ -1,26 +1,42 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\",
+  "WorkspaceRootPath": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|Solution Items{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|C:\\Users\\Besitzer\\Source\\Repos\\SWEN3-Paperless\\docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|Solution Items{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|solutionrelative:docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\besitzer\\source\\repos\\swen3-paperless\\paperlessrest\\dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\besitzer\\source\\repos\\swen3-paperless\\paperlessrest\\controllers\\documentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\controllers\\documentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\controllers\\documentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\besitzer\\source\\repos\\swen3-paperless\\paperlessrest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessocr\\dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|solutionrelative:paperlessocr\\dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\besitzer\\source\\repos\\swen3-paperless\\paperlessrest\\models\\document.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessocr\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|solutionrelative:paperlessocr\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessocr\\rabbitconsumerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|solutionrelative:paperlessocr\\rabbitconsumerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|Solution Items{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|C:\\Users\\danie\\Source\\Repos\\SWEN3-Paperless\\docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|Solution Items{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|solutionrelative:docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\services\\messagequeueservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\services\\messagequeueservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\models\\document.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\models\\document.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -30,11 +46,50 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 8,
           "Children": [
             {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Dockerfile",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Dockerfile",
+              "RelativeDocumentMoniker": "PaperlessOCR\\Dockerfile",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Dockerfile",
+              "RelativeToolTip": "PaperlessOCR\\Dockerfile",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-10-12T20:43:49.602Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "RabbitConsumerService.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\Source\\Repos\\SWEN3-Paperless\\PaperlessOCR\\RabbitConsumerService.cs",
+              "RelativeDocumentMoniker": "PaperlessOCR\\RabbitConsumerService.cs",
+              "ToolTip": "C:\\Users\\danie\\Source\\Repos\\SWEN3-Paperless\\PaperlessOCR\\RabbitConsumerService.cs",
+              "RelativeToolTip": "PaperlessOCR\\RabbitConsumerService.cs",
+              "ViewState": "AgIAACcAAAAAAAAAAAAowD4AAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-12T20:40:13.315Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Program.cs",
+              "RelativeDocumentMoniker": "PaperlessOCR\\Program.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Program.cs",
+              "RelativeToolTip": "PaperlessOCR\\Program.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAswBIAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-12T20:34:27.993Z",
+              "EditorCaption": ""
+            },
+            {
               "$type": "Bookmark",
-              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
             },
             {
               "$type": "Bookmark",
@@ -42,64 +97,78 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Dockerfile",
-              "DocumentMoniker": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Dockerfile",
-              "RelativeDocumentMoniker": "PaperlessREST\\Dockerfile",
-              "ToolTip": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Dockerfile",
-              "RelativeToolTip": "PaperlessREST\\Dockerfile",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAoAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-09-25T08:46:51.928Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "docker-compose.yml",
-              "DocumentMoniker": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\docker-compose.yml",
-              "RelativeDocumentMoniker": "docker-compose.yml",
-              "ToolTip": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\docker-compose.yml",
-              "RelativeToolTip": "docker-compose.yml",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAAABYAAAAkAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003775|",
-              "WhenOpened": "2025-09-22T07:36:04.791Z",
+              "DocumentIndex": 5,
+              "Title": "MessageQueueService.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Services\\MessageQueueService.cs",
+              "RelativeDocumentMoniker": "PaperlessREST\\Services\\MessageQueueService.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Services\\MessageQueueService.cs",
+              "RelativeToolTip": "PaperlessREST\\Services\\MessageQueueService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACUAAAAyAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-12T17:38:01.616Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Program.cs",
-              "RelativeDocumentMoniker": "PaperlessREST\\Program.cs",
-              "ToolTip": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Program.cs",
-              "RelativeToolTip": "PaperlessREST\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAA+AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-15T13:50:30.435Z"
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 4,
-              "Title": "Document.cs",
-              "DocumentMoniker": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Models\\Document.cs",
-              "RelativeDocumentMoniker": "PaperlessREST\\Models\\Document.cs",
-              "ToolTip": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Models\\Document.cs",
-              "RelativeToolTip": "PaperlessREST\\Models\\Document.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-15T13:45:02.262Z"
+              "Title": "docker-compose.yml",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\docker-compose.yml",
+              "RelativeDocumentMoniker": "docker-compose.yml",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\docker-compose.yml",
+              "RelativeToolTip": "docker-compose.yml",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAAACsAAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-09-23T11:37:24.071Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "DocumentsController.cs",
-              "DocumentMoniker": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Controllers\\DocumentsController.cs",
-              "RelativeDocumentMoniker": "PaperlessREST\\Controllers\\DocumentsController.cs",
-              "ToolTip": "C:\\Users\\Besitzer\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Controllers\\DocumentsController.cs",
-              "RelativeToolTip": "PaperlessREST\\Controllers\\DocumentsController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACUAAAAlAAAAAAAAAA==",
+              "DocumentIndex": 8,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Program.cs",
+              "RelativeDocumentMoniker": "PaperlessREST\\Program.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Program.cs",
+              "RelativeToolTip": "PaperlessREST\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-11T07:12:55.433Z"
+              "WhenOpened": "2025-09-09T18:50:05.321Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "DocumentsController.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Controllers\\DocumentsController.cs",
+              "RelativeDocumentMoniker": "PaperlessREST\\Controllers\\DocumentsController.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Controllers\\DocumentsController.cs",
+              "RelativeToolTip": "PaperlessREST\\Controllers\\DocumentsController.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAABEAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-09T18:49:45.542Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Data\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "PaperlessREST\\Data\\AppDbContext.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Data\\AppDbContext.cs",
+              "RelativeToolTip": "PaperlessREST\\Data\\AppDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-09T18:48:20.406Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Document.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Models\\Document.cs",
+              "RelativeDocumentMoniker": "PaperlessREST\\Models\\Document.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Models\\Document.cs",
+              "RelativeToolTip": "PaperlessREST\\Models\\Document.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-09T18:47:31.404Z"
             }
           ]
         },
