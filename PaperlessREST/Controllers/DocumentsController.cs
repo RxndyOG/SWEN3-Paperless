@@ -7,9 +7,19 @@ using Microsoft.Extensions.Logging;
 
 namespace PaperlessREST.Controllers;
 
+public interface IDocumentsController
+{
+    IActionResult GetAll();
+    IActionResult Create(Document doc, MessageQueueService mq);
+    IActionResult UpdateDocument(int id, Document newDoc);
+    IActionResult GetDocById(int id);
+    IActionResult DeleteDocById(int id);
+}
+
+
 [ApiController]
 [Route("api/[controller]")]
-public class DocumentsController : ControllerBase
+public class DocumentsController : ControllerBase, IDocumentsController
 {
     private readonly AppDbContext _db;
     private readonly ILogger<DocumentsController> _logger;

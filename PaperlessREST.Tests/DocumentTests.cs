@@ -6,6 +6,7 @@ using PaperlessREST.Controllers;
 using PaperlessREST.Data;
 using PaperlessREST.Models;
 using Xunit;
+using Microsoft.Extensions.Logging;
 
 public class DocumentRepositoryTests : IClassFixture<PostgresFixture>
 {
@@ -80,7 +81,8 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
         IActionResult result;
         using (var db = NewDb())
         {
-            var controller = new DocumentsController(db);
+            var logger = new LoggerFactory().CreateLogger<DocumentsController>();
+            var controller = new DocumentsController(db, logger);
             var dto = new Document { FileName = "new.pdf", Content = "new content" };
 
             // Act
@@ -124,7 +126,8 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
         IActionResult result;
         using (var db = NewDb())
         {
-            var controller = new DocumentsController(db);
+            var logger = new LoggerFactory().CreateLogger<DocumentsController>();
+            var controller = new DocumentsController(db, logger);
             var documentToFetch = new Document { Id = id, FileName = "this should be returned", Content = "this is the content" };
 
             result = controller.GetDocById(id);
@@ -165,7 +168,8 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
 
         using (var db = NewDb())
         {
-            var controller = new DocumentsController(db);
+            var logger = new LoggerFactory().CreateLogger<DocumentsController>();
+            var controller = new DocumentsController(db, logger);
 
             // Call DELETE
             deleteResult = controller.DeleteDocById(id);
@@ -188,7 +192,8 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
     public void UpdateDocument_Should_Return_NotFound_When_Id_Does_Not_Exist()
     {
         using var db = NewDb();
-        var controller = new DocumentsController(db);
+        var logger = new LoggerFactory().CreateLogger<DocumentsController>();
+        var controller = new DocumentsController(db, logger);
 
         var dto = new Document { FileName = "x.pdf", Content = "x" };
 

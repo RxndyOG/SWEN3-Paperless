@@ -6,7 +6,13 @@ using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using System.Text;
 
-public class RabbitConsumerService : BackgroundService
+public interface IRabbitConsumerService
+{
+    Task StartAsync(System.Threading.CancellationToken cancellationToken);
+    Task StopAsync(System.Threading.CancellationToken cancellationToken);
+}
+
+public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
 {
     private readonly ILogger<RabbitConsumerService> _logger;
     private readonly RabbitOptions _opts;
