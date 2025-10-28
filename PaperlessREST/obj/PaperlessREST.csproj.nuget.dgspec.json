@@ -60,6 +60,10 @@
               "target": "Package",
               "version": "[8.0.0, )"
             },
+            "Minio": {
+              "target": "Package",
+              "version": "[6.0.5, )"
+            },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
               "version": "[8.0.0, )"

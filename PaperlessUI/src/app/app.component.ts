@@ -120,7 +120,7 @@ export class AppComponent implements OnInit {
     formData.append('file', file);
     // The API expects just the file, based on the response structure
 
-    this.http.post('/api/documents', formData).subscribe({
+    this.http.post('/api/documents/upload', formData).subscribe({
       next: (response) => {
         this.isUploading = false;
         this.uploadStatus = 'File uploaded successfully!';
