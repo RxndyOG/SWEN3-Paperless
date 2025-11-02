@@ -71,7 +71,8 @@ export class AppComponent implements OnInit {
     this.isUploading = true;
     this.uploadStatus = 'Posting fake document...';
 
-    this.http.post<Document>('/api/documents', payload).subscribe({
+  // Use the legacy JSON create endpoint so the server will persist the record
+  this.http.post<Document>('/api/documents/create', payload).subscribe({
       next: (created) => {
         // Insert server-returned document at front
         this.documents = [created, ...this.documents];
@@ -120,7 +121,7 @@ export class AppComponent implements OnInit {
     formData.append('file', file);
     // The API expects just the file, based on the response structure
 
-    this.http.post('/api/documents/upload', formData).subscribe({
+    this.http.post('/api/documents', formData).subscribe({
       next: (response) => {
         this.isUploading = false;
         this.uploadStatus = 'File uploaded successfully!';

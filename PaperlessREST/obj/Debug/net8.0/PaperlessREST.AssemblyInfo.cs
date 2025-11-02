@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PaperlessREST")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0b123e0b5fe7321fbd7c54783ce8ced91d47b176")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+001f6e5d1a4da80b2663bdec849fdfe1e2368357")]
 [assembly: System.Reflection.AssemblyProductAttribute("PaperlessREST")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PaperlessREST")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
