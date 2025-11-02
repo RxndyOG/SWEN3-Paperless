@@ -10,6 +10,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddSingleton<MessageQueueService>();
 
+builder.Services.AddSingleton<IObjectStorage>(sp =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+    var storage = new MinioStorage(cfg);
+    storage.EnsureBucketAsync().GetAwaiter().GetResult();
+    return storage;
+});
+
 builder.Services.AddControllers();
 var app = builder.Build();
 

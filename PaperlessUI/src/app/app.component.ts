@@ -71,7 +71,8 @@ export class AppComponent implements OnInit {
     this.isUploading = true;
     this.uploadStatus = 'Posting fake document...';
 
-    this.http.post<Document>('/api/documents', payload).subscribe({
+  // Use the legacy JSON create endpoint so the server will persist the record
+  this.http.post<Document>('/api/documents/create', payload).subscribe({
       next: (created) => {
         // Insert server-returned document at front
         this.documents = [created, ...this.documents];

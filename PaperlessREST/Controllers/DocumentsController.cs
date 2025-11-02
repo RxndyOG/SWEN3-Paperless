@@ -1,87 +1,319 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PaperlessREST.Data;
 using PaperlessREST.Models;
 using PaperlessREST.Services;
-using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace PaperlessREST.Controllers;
 
+public interface IDocumentsController
+{
+    Task<IActionResult> GetAll();
+    Task<IActionResult> Upload([FromForm] IFormFile file);
+    Task<IActionResult> UpdateDocument(int id, Document newDoc);
+    Task<IActionResult> GetDocById(int id);
+    Task<IActionResult> DeleteDocById(int id);
+}
+
+
+
 [ApiController]
 [Route("api/[controller]")]
-public class DocumentsController : ControllerBase
+public class DocumentsController : ControllerBase, IDocumentsController
 {
     private readonly AppDbContext _db;
     private readonly ILogger<DocumentsController> _logger;
+    private readonly IObjectStorage _storage;
+    private readonly MessageQueueService _mq;
 
-    public DocumentsController(AppDbContext db, ILogger<DocumentsController> logger)
+    public DocumentsController(
+        AppDbContext db,
+        ILogger<DocumentsController> logger,
+        IObjectStorage storage,
+        MessageQueueService mq)
     {
         _db = db;
         _logger = logger;
+        _storage = storage;
+        _mq = mq;
     }
 
     [HttpGet]
-    public IActionResult GetAll() => Ok(_db.Documents.ToList());
-
-
-    [HttpPost]
-    public IActionResult Create([FromBody] Document doc, [FromServices] MessageQueueService mq)
+    public async Task<IActionResult> GetAll()
     {
-        _db.Documents.Add(doc);
-        _db.SaveChanges();
-
-        // Send message to RabbitMQ
-        mq.Publish($"New document uploaded: {doc.FileName} (ID: {doc.Id})");
-        _logger.LogInformation($"New document uploaded: {doc.FileName} (ID: {doc.Id}");
-
-        return CreatedAtAction(nameof(GetAll), new { id = doc.Id }, doc);
+        try
+        {
+            var docs = await _db.Documents.AsNoTracking().OrderByDescending(d => d.CreatedAt).ToListAsync();
+            return Ok(docs);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve documents");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to retrieve documents");
+        }
     }
 
-
-    [HttpPut("{id:int}")]
-    public IActionResult UpdateDocument(int id, [FromBody] Document newDoc)
+    // Accept only PDF files (enforced). Stores the file in MinIO and metadata in DB.
+    [HttpPost]
+    public async Task<IActionResult> Upload([FromForm] IFormFile file)
     {
-        var doc = _db.Documents.Find(id);
-        if (doc == null)
-            return NotFound();
+        if (file is null)
+            return BadRequest("File is required.");
 
-        doc.FileName = newDoc.FileName;
-        doc.Content = newDoc.Content;
+        if (file.Length == 0)
+            return BadRequest("File is empty.");
 
-        int changes = _db.SaveChanges();
+        // Enforce PDF only. Accept if content-type indicates PDF or filename ends with .pdf
+        var isPdfContentType = string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase);
+        var hasPdfExtension = file.FileName?.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) == true;
 
-        if (changes == 0)
+        if (!isPdfContentType && !hasPdfExtension)
         {
-            return BadRequest("Error occured while updating a document");
-            _logger.LogError("Error occured while updating a document");
+            _logger.LogWarning("Rejected upload: non-PDF file {FileName} with content-type {ContentType}", file.FileName, file.ContentType);
+            return BadRequest("Only PDF files are accepted.");
         }
 
-        else
+        var objectKey = $"{Guid.NewGuid():N}_{Path.GetFileName(file.FileName)}";
+
+        try
         {
+            _logger.LogInformation("Uploading PDF {ObjectKey} (name: {FileName}, size: {Size})", objectKey, file.FileName, file.Length);
+
+            await using var stream = file.OpenReadStream();
+            // Ensure bucket exists and put object
+            await _storage.PutObjectAsync(stream, objectKey, "application/pdf");
+
+            var doc = new Document
+            {
+                FileName = Path.GetFileName(file.FileName),
+                ObjectKey = objectKey,
+                ContentType = "application/pdf", // enforce PDF type in metadata
+                SizeBytes = file.Length,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.Documents.Add(doc);
+            await _db.SaveChangesAsync();
+
+            try
+            { 
+                var msg = new UploadedDocMessage(
+                    doc.Id,
+                    Bucket: "documents", // or read from config
+                    objectKey,
+                    doc.FileName,
+                    doc.ContentType ?? "application/pdf");
+
+                _mq.Publish(JsonSerializer.Serialize(msg));
+                _logger.LogInformation("Published upload message for document id {Id}", doc.Id);
+            }
+            catch (Exception mqEx)
+            {
+                _logger.LogWarning(mqEx, "Failed to publish message for document id {Id}", doc.Id);
+            }
+
+            _logger.LogInformation("Uploaded document saved (id: {Id}, key: {Key})", doc.Id, objectKey);
+            return CreatedAtAction(nameof(GetDocById), new { id = doc.Id }, doc);
+        }
+        catch (Minio.Exceptions.MinioException mex)
+        {
+            _logger.LogError(mex, "Object storage error while uploading {ObjectKey}", objectKey);
+            return StatusCode(StatusCodes.Status502BadGateway, "Object storage error");
+        }
+        catch (DbUpdateException dbEx)
+        {
+            _logger.LogError(dbEx, "Database error while saving metadata for {ObjectKey}", objectKey);
+
+            // try to cleanup stored object
+            try
+            {
+                await _storage.RemoveObjectAsync(objectKey);
+                _logger.LogInformation("Rolled back stored object {ObjectKey} after DB failure", objectKey);
+            }
+            catch (Exception cleanEx)
+            {
+                _logger.LogWarning(cleanEx, "Failed to remove object {ObjectKey} after DB failure", objectKey);
+            }
+
+            return StatusCode(StatusCodes.Status500InternalServerError, "Database error while saving document metadata");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while uploading document {FileName}", file.FileName);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error while uploading document");
+        }
+    }
+
+    //legacy endpoint - likely wont update a document -> delete and insert new one instead
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> UpdateDocument(int id, [FromBody] Document newDoc)
+    {
+        if (newDoc is null) return BadRequest("Document payload is required.");
+
+        try
+        {
+            var doc = await _db.Documents.FindAsync(id);
+            if (doc == null)
+            {
+                _logger.LogInformation("Document {Id} not found for update", id);
+                return NotFound();
+            }
+
+            doc.FileName = newDoc.FileName;
+            doc.Content = newDoc.Content;
+
+            var changes = await _db.SaveChangesAsync();
+            if (changes == 0)
+            {
+                _logger.LogWarning("No changes persisted when updating document {Id}", id);
+                return BadRequest("No changes were persisted.");
+            }
+
+            _logger.LogInformation("Updated document {Id}", id);
             return NoContent();
-            _logger.LogInformation($"Change {changes}");
+        }
+        catch (DbUpdateException dbEx)
+        {
+            _logger.LogError(dbEx, "Database error while updating document {Id}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Database error");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while updating document {Id}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error");
         }
     }
 
     [HttpGet("{id:int}")]
-    public IActionResult GetDocById(int id) => Ok(_db.Documents.Find(id));
+    public async Task<IActionResult> GetDocById(int id)
+    {
+        try
+        {
+            var doc = await _db.Documents.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id);
+            if (doc == null)
+            {
+                _logger.LogInformation("Document {Id} not found", id);
+                return NotFound();
+            }
+
+            try
+            {
+                var url = _storage.GetPresignedGetUrl(doc.ObjectKey, TimeSpan.FromMinutes(10));
+                var result = new
+                {
+                    doc.Id,
+                    doc.FileName,
+                    doc.ContentType,
+                    doc.SizeBytes,
+                    doc.CreatedAt,
+                    doc.ObjectKey,
+                    DownloadUrl = url
+                };
+                return Ok(result);
+            }
+            catch (Exception urlEx)
+            {
+                _logger.LogWarning(urlEx, "Failed to generate presigned URL for object {Key}", doc.ObjectKey);
+                return Ok(doc);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get document {Id}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to retrieve document");
+        }
+    }
+
+    [HttpGet("{id:int}/download")]
+    public async Task<IActionResult> Download(int id)
+    {
+        try
+        {
+            var doc = await _db.Documents.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id);
+            if (doc == null)
+            {
+                _logger.LogInformation("Document {Id} not found for download", id);
+                return NotFound();
+            }
+
+            var stream = await _storage.GetObjectAsync(doc.ObjectKey);
+            return File(stream, doc.ContentType ?? "application/pdf", doc.FileName);
+        }
+        catch (Minio.Exceptions.MinioException mex)
+        {
+            _logger.LogError(mex, "Object storage error while downloading document {Id}", id);
+            return StatusCode(StatusCodes.Status502BadGateway, "Object storage error");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while downloading document {Id}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error");
+        }
+    }
 
     [HttpDelete("{id:int}")]
-    public IActionResult DeleteDocById(int id)
+    public async Task<IActionResult> DeleteDocById(int id)
     {
-        var doc = _db.Documents.Find(id);
-        if (doc == null)
-            return NotFound();
-        _db.Documents.Remove(doc);
-
-        int changes = _db.SaveChanges();
-        if (changes == 0)
+        try
         {
-            return BadRequest("error occured while deleting a document");
-            _logger.LogError($"{nameof(DeleteDocById)} failed to delete");
-        }
+            var doc = await _db.Documents.FindAsync(id);
+            if (doc == null)
+            {
+                _logger.LogInformation("Document {Id} not found for deletion", id);
+                return NotFound();
+            }
 
-        _logger.LogInformation($"Removed {doc.FileName} successfully");
-        return Ok("successfully removed");
+            try
+            {
+                await _storage.RemoveObjectAsync(doc.ObjectKey);
+                _logger.LogInformation("Removed object {Key} from storage for document {Id}", doc.ObjectKey, id);
+            }
+            catch (Exception storageEx)
+            {
+                _logger.LogError(storageEx, "Failed to remove object {Key} from storage for document {Id}", doc.ObjectKey, id);
+                return StatusCode(StatusCodes.Status502BadGateway, "Failed to remove object from storage");
+            }
+
+            _db.Documents.Remove(doc);
+            var changes = await _db.SaveChangesAsync();
+            if (changes == 0)
+            {
+                _logger.LogWarning("No DB changes when deleting document {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to delete document record");
+            }
+
+            try
+            {
+                _mq.Publish($"Document deleted: {doc.FileName} (ID: {doc.Id})");
+            }
+            catch (Exception mqEx)
+            {
+                _logger.LogWarning(mqEx, "Failed to publish delete message for document {Id}", id);
+            }
+
+            _logger.LogInformation("Deleted document {Id} and its object {Key}", id, doc.ObjectKey);
+            return Ok("successfully removed");
+        }
+        catch (DbUpdateException dbEx)
+        {
+            _logger.LogError(dbEx, "Database error while deleting document {Id}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Database error");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while deleting document {Id}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error");
+        }
     }
 }
+
+
+public record UploadedDocMessage(
+    int DocumentId,
+    string Bucket,
+    string ObjectKey,
+    string FileName,
+    string ContentType);

@@ -4,13 +4,20 @@ using System.Text;
 
 namespace PaperlessREST.Services;
 
-public class MessageQueueService : IDisposable
+public interface IMessageQueueService
+{
+    void Publish(string message);
+}
+
+public class MessageQueueService : IMessageQueueService, IDisposable
 {
     private readonly IConnection _connection;
     private readonly IModel _channel;
     private readonly ILogger<MessageQueueService> _logger;
     private bool _disposed;
 
+
+    public MessageQueueService() { }
     public MessageQueueService(IConfiguration config, ILogger<MessageQueueService> logger)
     {
         _logger = logger;

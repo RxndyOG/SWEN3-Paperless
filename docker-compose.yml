@@ -19,8 +19,8 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"    # messaging port (for your REST/OCR services)
-      - "15672:15672"  # management UI (open in browser)
+      - "5672:5672"    # messaging port
+      - "15672:15672"  # management UI
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: pass
@@ -40,6 +40,10 @@ services:
       RABBITMQ_USER: user
       RABBITMQ_PASS: pass
       RABBITMQ_QUEUE: documents
+      MINIO__ENDPOINT: minio:9000
+      MINIO__ACCESSKEY: paperless
+      MINIO__SECRETKEY: paperlesssecret123
+      MINIO__USESSL: "false"
 
   rest:
     build: ./PaperlessRest
@@ -52,11 +56,33 @@ services:
       RabbitMQ__Host: rabbitmq
       RabbitMQ__User: user
       RabbitMQ__Pass: pass
+      MinIO__Endpoint: minio:9000
+      MinIO__AccessKey: paperless
+      MinIO__SecretKey: paperlesssecret123
+      MinIO__Bucket: documents
+      MinIO__UseSSL: "false"
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: paperless
+      MINIO_ROOT_PASSWORD: paperlesssecret123
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
     build: ./PaperlessUI
@@ -66,4 +92,5 @@ services:
       - rest
 
 volumes:
+  minio_data:
   postgres_data:
