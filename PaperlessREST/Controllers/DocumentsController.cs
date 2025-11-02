@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PaperlessREST.Data;
 using PaperlessREST.Models;
 using PaperlessREST.Services;
-using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace PaperlessREST.Controllers;
 
@@ -12,11 +13,12 @@ public interface IDocumentsController
 {
     Task<IActionResult> GetAll();
     Task<IActionResult> Upload([FromForm] IFormFile file);
-    Task<IActionResult> Create(Document doc, MessageQueueService mq);
     Task<IActionResult> UpdateDocument(int id, Document newDoc);
     Task<IActionResult> GetDocById(int id);
     Task<IActionResult> DeleteDocById(int id);
 }
+
+
 
 [ApiController]
 [Route("api/[controller]")]
@@ -96,10 +98,16 @@ public class DocumentsController : ControllerBase, IDocumentsController
             _db.Documents.Add(doc);
             await _db.SaveChangesAsync();
 
-            // best-effort publish
             try
-            {
-                _mq.Publish($"New document uploaded: {doc.FileName} (ID: {doc.Id})");
+            { 
+                var msg = new UploadedDocMessage(
+                    doc.Id,
+                    Bucket: "documents", // or read from config
+                    objectKey,
+                    doc.FileName,
+                    doc.ContentType ?? "application/pdf");
+
+                _mq.Publish(JsonSerializer.Serialize(msg));
                 _logger.LogInformation("Published upload message for document id {Id}", doc.Id);
             }
             catch (Exception mqEx)
@@ -139,45 +147,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
         }
     }
 
-    // Legacy create endpoint - still enforces PDF content type in metadata if not provided
-    [HttpPost("create")]
-    public async Task<IActionResult> Create([FromBody] Document doc, [FromServices] MessageQueueService mq)
-    {
-        if (doc is null) return BadRequest("Document is required.");
-
-        try
-        {
-            // enforce PDF metadata
-            doc.ContentType = "application/pdf";
-            doc.CreatedAt = DateTime.UtcNow;
-
-            _db.Documents.Add(doc);
-            _db.SaveChanges();
-
-            try
-            {
-                mq.Publish($"New document uploaded: {doc.FileName} (ID: {doc.Id})");
-                _logger.LogInformation("Published message for legacy create, id {Id}", doc.Id);
-            }
-            catch (Exception mqEx)
-            {
-                _logger.LogWarning(mqEx, "Failed to publish message for legacy create id {Id}", doc.Id);
-            }
-
-            return CreatedAtAction(nameof(GetDocById), new { id = doc.Id }, doc);
-        }
-        catch (DbUpdateException dbEx)
-        {
-            _logger.LogError(dbEx, "Database error while creating document record");
-            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to save document");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error during Create");
-            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error");
-        }
-    }
-
+    //legacy endpoint - likely wont update a document -> delete and insert new one instead
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateDocument(int id, [FromBody] Document newDoc)
     {
@@ -339,3 +309,11 @@ public class DocumentsController : ControllerBase, IDocumentsController
         }
     }
 }
+
+
+public record UploadedDocMessage(
+    int DocumentId,
+    string Bucket,
+    string ObjectKey,
+    string FileName,
+    string ContentType);

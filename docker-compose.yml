@@ -40,6 +40,10 @@ services:
       RABBITMQ_USER: user
       RABBITMQ_PASS: pass
       RABBITMQ_QUEUE: documents
+      MINIO__ENDPOINT: minio:9000
+      MINIO__ACCESSKEY: paperless
+      MINIO__SECRETKEY: paperlesssecret123
+      MINIO__USESSL: "false"
 
   rest:
     build: ./PaperlessRest

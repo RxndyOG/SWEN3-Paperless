@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Crypto;
 using PaperlessREST.Controllers;
 using PaperlessREST.Data;
 using PaperlessREST.Models;
 using Xunit;
 using Microsoft.Extensions.Logging;
+using PaperlessREST.Services;
+using Moq;
 
 public class DocumentRepositoryTests : IClassFixture<PostgresFixture>
 {
@@ -82,11 +83,13 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
         using (var db = NewDb())
         {
             var logger = new LoggerFactory().CreateLogger<DocumentsController>();
-            var controller = new DocumentsController(db, logger);
+            var storage = new Mock<IObjectStorage>().Object;
+            var mq = new Mock<MessageQueueService>().Object;
+            var controller = new DocumentsController(db, logger, storage, mq);
             var dto = new Document { FileName = "new.pdf", Content = "new content" };
 
             // Act
-            result = controller.UpdateDocument(id, dto);
+            result = await controller.UpdateDocument(id, dto);
         }
 
         // Assert HTTP result
@@ -103,43 +106,50 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
     [Fact]
     public async Task GetExistingDocumentById()
     {
-        //Arrange
+        // Arrange
         int id;
         using (var db = NewDb())
         {
             CleanDocuments(db);
 
             var docs = new List<Document>
-            { new Document { FileName = "test1", Content = "dummyContent", CreatedAt = DateTime.UtcNow },
-            new Document { FileName = "this should be returned", Content = "this is the content", CreatedAt= DateTime.UtcNow },
-            new Document { FileName = "blah", Content = "blah", CreatedAt = DateTime.UtcNow}
-            };
-            foreach (var doc in docs)
-            {
-                db.Documents.Add(doc);
-            }
+        {
+            new Document { FileName = "test1", Content = "dummyContent", CreatedAt = DateTime.UtcNow },
+            new Document { FileName = "this should be returned", Content = "this is the content", CreatedAt = DateTime.UtcNow },
+            new Document { FileName = "blah", Content = "blah", CreatedAt = DateTime.UtcNow }
+        };
+
+            db.Documents.AddRange(docs);
             await db.SaveChangesAsync();
             id = docs[1].Id;
         }
 
-        //Act
+        // Act
         IActionResult result;
         using (var db = NewDb())
         {
             var logger = new LoggerFactory().CreateLogger<DocumentsController>();
-            var controller = new DocumentsController(db, logger);
-            var documentToFetch = new Document { Id = id, FileName = "this should be returned", Content = "this is the content" };
 
-            result = controller.GetDocById(id);
+            var storageMock = new Mock<IObjectStorage>();
+            // Force the controller into the fallback branch that returns the Document directly:
+            storageMock
+                .Setup(s => s.GetPresignedGetUrl(It.IsAny<string>(), It.IsAny<TimeSpan>()))
+                .Throws(new Exception("presign fail"));
+
+            var mqMock = new Mock<MessageQueueService>();
+
+            var controller = new DocumentsController(db, logger, storageMock.Object, mqMock.Object);
+
+            result = await controller.GetDocById(id);
         }
 
-        //Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var document = Assert.IsType<Document>(okResult.Value);
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var document = Assert.IsType<Document>(ok.Value);
         Assert.Equal("this should be returned", document.FileName);
         Assert.Equal("this is the content", document.Content);
         Assert.Equal(id, document.Id);
     }
+
 
     [Fact]
     public async Task InsertDocumentThenDeleteShouldReturnOk()
@@ -169,13 +179,15 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
         using (var db = NewDb())
         {
             var logger = new LoggerFactory().CreateLogger<DocumentsController>();
-            var controller = new DocumentsController(db, logger);
+            var storage = new Mock<IObjectStorage>().Object;
+            var mq = new Mock<MessageQueueService>().Object;
+            var controller = new DocumentsController(db, logger, storage, mq);
 
             // Call DELETE
-            deleteResult = controller.DeleteDocById(id);
+            deleteResult = await controller.DeleteDocById(id);
 
             // Call GET ALL
-            var getAllResult = controller.GetAll();
+            var getAllResult = await controller.GetAll();
 
             // unwrap OkObjectResult and get the list
             var okObject = Assert.IsType<OkObjectResult>(getAllResult);
@@ -189,15 +201,17 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
     }
 
     [Fact]
-    public void UpdateDocument_Should_Return_NotFound_When_Id_Does_Not_Exist()
+    public async Task UpdateDocument_Should_Return_NotFound_When_Id_Does_Not_Exist()
     {
         using var db = NewDb();
         var logger = new LoggerFactory().CreateLogger<DocumentsController>();
-        var controller = new DocumentsController(db, logger);
+        var storage = new Mock<IObjectStorage>().Object;
+        var mq = new Mock<MessageQueueService>().Object;
+        var controller = new DocumentsController(db, logger, storage, mq);
 
         var dto = new Document { FileName = "x.pdf", Content = "x" };
 
-        var result = controller.UpdateDocument(999999, dto);
+        var result = await controller.UpdateDocument(999999, dto);
 
         Assert.IsType<NotFoundResult>(result);
     }

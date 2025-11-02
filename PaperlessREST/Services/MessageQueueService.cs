@@ -16,6 +16,8 @@ public class MessageQueueService : IMessageQueueService, IDisposable
     private readonly ILogger<MessageQueueService> _logger;
     private bool _disposed;
 
+
+    public MessageQueueService() { }
     public MessageQueueService(IConfiguration config, ILogger<MessageQueueService> logger)
     {
         _logger = logger;

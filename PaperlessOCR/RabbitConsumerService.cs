@@ -1,10 +1,16 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
+using Minio;
+using Minio.DataModel.Args;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
+using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
+using static System.Net.Mime.MediaTypeNames;
 
 public interface IRabbitConsumerService
 {
@@ -12,18 +18,23 @@ public interface IRabbitConsumerService
     Task StopAsync(System.Threading.CancellationToken cancellationToken);
 }
 
+public record UploadedDocMessage(int DocumentId, string Bucket, string ObjectKey, string FileName, string ContentType);
+
+
 public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
 {
     private readonly ILogger<RabbitConsumerService> _logger;
     private readonly RabbitOptions _opts;
+    private readonly IMinioClient _minio;
 
     private IConnection? _conn;
     private IModel? _channel;
 
-    public RabbitConsumerService(ILogger<RabbitConsumerService> logger, IOptions<RabbitOptions> opts)
+    public RabbitConsumerService(ILogger<RabbitConsumerService> logger, IOptions<RabbitOptions> opts, IMinioClient minio)
     {
         _logger = logger;
         _opts = opts.Value;
+        _minio = minio;
     }
 
     public override async Task StartAsync(System.Threading.CancellationToken cancellationToken)
@@ -78,13 +89,49 @@ public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
         var consumer = new AsyncEventingBasicConsumer(_channel);
         consumer.Received += async (model, ea) =>
         {
+            var tag = ea.DeliveryTag;
             try
             {
-                var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-                _logger.LogInformation("Received message: {Message}", message);
+                var message = Encoding.UTF8.GetString(ea.Body.ToArray());
+                var payload = JsonSerializer.Deserialize<UploadedDocMessage>(message);
+                if (payload is null)
+                    throw new InvalidOperationException("Invalid message payload");
 
-                //Plug OCR here later
+                _logger.LogInformation("OCR: Received doc {Id} {File} ({Type})", payload.DocumentId, payload.FileName, payload.ContentType);
+
+                var tmpDir = Path.Combine(Path.GetTempPath(), "paperless-ocr");
+                Directory.CreateDirectory(tmpDir);
+                var tmpFile = Path.Combine(tmpDir, $"{Guid.NewGuid():N}-{payload.FileName}");
+
+                await using (var fs = File.Create(tmpFile))
+                {
+                    await _minio.GetObjectAsync(new Minio.DataModel.Args.GetObjectArgs()
+                        .WithBucket(payload.Bucket)
+                        .WithObject(payload.ObjectKey)
+                        .WithCallbackStream(s => s.CopyTo(fs)), cancellationToken: stoppingToken);
+                }
+
+                string text;
+                // pdftoppm -png -singlefile inPath outBase
+                var outBase = Path.Combine(tmpDir, Path.GetFileNameWithoutExtension(tmpFile));
+                RunOrThrow(
+                  "pdftoppm",
+                  $"-png -f 1 -l 1 \"{tmpFile}\" \"{outBase}\""
+                );
+
+                var png = outBase + "-1.png";
+
+                text = RunTesseractToText(png);
+
+                TryDelete(png);
+
+                _logger.LogInformation("OCR: Document {Id} text (first ~400 chars): {Preview}",
+                    payload.DocumentId,
+                    text.Length > 400 ? text.Substring(0, 400) + "..." : text);
+
+                // TODO: update DB with recognized text later
+
+                TryDelete(tmpFile);
 
                 _channel.BasicAck(ea.DeliveryTag, multiple: false);
             }
@@ -133,5 +180,38 @@ public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
             _logger.LogError(ex, "Error during RabbitMQ shutdown.");
         }
         await base.StopAsync(cancellationToken);
+    }
+
+    public static string RunTesseractToText(string imgPath)
+    {
+        var psi = new ProcessStartInfo("tesseract", $"\"{imgPath}\" stdout")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        using var p = Process.Start(psi)!;
+        var output = p.StandardOutput.ReadToEnd();
+        p.WaitForExit();
+        if (p.ExitCode != 0)
+            throw new InvalidOperationException($"ERROR: Tesseract failed: {p.StandardError.ReadToEnd()}");
+        return output;
+    }
+
+    private static void TryDelete(string path)
+    {
+        try { if (File.Exists(path)) File.Delete(path); } catch { }
+    }
+
+    private static void RunOrThrow(string fileName, string args)
+    {
+        var psi = new ProcessStartInfo(fileName, args)
+        {
+            RedirectStandardError = true,
+            RedirectStandardOutput = true
+        };
+        using var p = Process.Start(psi)!;
+        p.WaitForExit();
+        if (p.ExitCode != 0)
+            throw new InvalidOperationException($"{fileName} failed: {p.StandardError.ReadToEnd()}");
     }
 }
