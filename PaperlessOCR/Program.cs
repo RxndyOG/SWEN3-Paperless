@@ -1,7 +1,9 @@
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Minio;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Minio;
+using PaperlessOCR.Abstractions;
+using PaperlessOCR.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -25,6 +27,9 @@ builder.Services.Configure<MinioOptions>(opts =>
     opts.UseSSL = (cfg["MINIO_USESSL"] ?? "false").Equals("true", StringComparison.OrdinalIgnoreCase);
 });
 
+builder.Services.AddSingleton<IObjectFetcher, MinioObjectFetcher>();
+builder.Services.AddSingleton<IOcrEngine, CliOcrEngine>();
+builder.Services.AddSingleton<IOcrResultSink, LoggingOcrResultSink>();
 builder.Services.AddHostedService<RabbitConsumerService>();
 
 builder.Services.AddSingleton<IMinioClient>(sp =>

@@ -3,20 +3,72 @@
   "WorkspaceRootPath": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\services\\messagequeueservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\services\\messagequeueservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest.tests\\ocrtests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|solutionrelative:paperlessrest.tests\\ocrtests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessocr\\rabbitconsumerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|solutionrelative:paperlessocr\\rabbitconsumerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\services\\miniostorage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\services\\miniostorage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest.tests\\documenttests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|solutionrelative:paperlessrest.tests\\documenttests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\controllers\\documentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\controllers\\documentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessocr\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|solutionrelative:paperlessocr\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessocr\\services\\loggingocrresultsink.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|solutionrelative:paperlessocr\\services\\loggingocrresultsink.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessocr\\services\\cliocrengine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|solutionrelative:paperlessocr\\services\\cliocrengine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessocr\\services\\minioobjectfetcher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|solutionrelative:paperlessocr\\services\\minioobjectfetcher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessocr\\abstractions\\iocrresultsink.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|solutionrelative:paperlessocr\\abstractions\\iocrresultsink.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessocr\\abstractions\\iobjectfetcher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|solutionrelative:paperlessocr\\abstractions\\iobjectfetcher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessocr\\abstractions\\iocrengine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|solutionrelative:paperlessocr\\abstractions\\iocrengine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|Solution Items{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|C:\\Users\\danie\\Source\\Repos\\SWEN3-Paperless\\docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|Solution Items{BAAFB3D0-FD41-499E-8293-83828BF4DCC4}|solutionrelative:docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessocr\\dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{023203B6-61C7-4EDA-8A2C-085156C8BA52}|PaperlessOCR\\PaperlessOCR.csproj|solutionrelative:paperlessocr\\dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\models\\document.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\models\\document.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\services\\messagequeueservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\services\\messagequeueservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest\\services\\miniostorage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9AEC032E-688E-4054-9095-540DC21CBD3A}|PaperlessREST\\PaperlessREST.csproj|solutionrelative:paperlessrest\\services\\miniostorage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +78,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -38,20 +90,186 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "DocumentTests.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\DocumentTests.cs",
+              "RelativeDocumentMoniker": "PaperlessREST.Tests\\DocumentTests.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\DocumentTests.cs",
+              "RelativeToolTip": "PaperlessREST.Tests\\DocumentTests.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-03T00:02:16.059Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "OcrTests.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\OcrTests.cs",
+              "RelativeDocumentMoniker": "PaperlessREST.Tests\\OcrTests.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\OcrTests.cs",
+              "RelativeToolTip": "PaperlessREST.Tests\\OcrTests.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAgwBoAAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-03T00:01:27.605Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Program.cs",
+              "RelativeDocumentMoniker": "PaperlessREST\\Program.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Program.cs",
+              "RelativeToolTip": "PaperlessREST\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-02T23:59:52.268Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "LoggingOcrResultSink.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Services\\LoggingOcrResultSink.cs",
+              "RelativeDocumentMoniker": "PaperlessOCR\\Services\\LoggingOcrResultSink.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Services\\LoggingOcrResultSink.cs",
+              "RelativeToolTip": "PaperlessOCR\\Services\\LoggingOcrResultSink.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-02T23:54:31.639Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "CliOcrEngine.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Services\\CliOcrEngine.cs",
+              "RelativeDocumentMoniker": "PaperlessOCR\\Services\\CliOcrEngine.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Services\\CliOcrEngine.cs",
+              "RelativeToolTip": "PaperlessOCR\\Services\\CliOcrEngine.cs",
+              "ViewState": "AgIAABcAAAAAAAAAAAAswDcAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-02T23:50:12.723Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "MinioObjectFetcher.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Services\\MinioObjectFetcher.cs",
+              "RelativeDocumentMoniker": "PaperlessOCR\\Services\\MinioObjectFetcher.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Services\\MinioObjectFetcher.cs",
+              "RelativeToolTip": "PaperlessOCR\\Services\\MinioObjectFetcher.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwB8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-02T23:44:49.747Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "IOcrResultSink.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Abstractions\\IOcrResultSink.cs",
+              "RelativeDocumentMoniker": "PaperlessOCR\\Abstractions\\IOcrResultSink.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Abstractions\\IOcrResultSink.cs",
+              "RelativeToolTip": "PaperlessOCR\\Abstractions\\IOcrResultSink.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-02T23:43:27.427Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "IOcrEngine.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Abstractions\\IOcrEngine.cs",
+              "RelativeDocumentMoniker": "PaperlessOCR\\Abstractions\\IOcrEngine.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Abstractions\\IOcrEngine.cs",
+              "RelativeToolTip": "PaperlessOCR\\Abstractions\\IOcrEngine.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-02T23:42:52.788Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "IObjectFetcher.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Abstractions\\IObjectFetcher.cs",
+              "RelativeDocumentMoniker": "PaperlessOCR\\Abstractions\\IObjectFetcher.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Abstractions\\IObjectFetcher.cs",
+              "RelativeToolTip": "PaperlessOCR\\Abstractions\\IObjectFetcher.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-02T23:42:25.34Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "docker-compose.yml",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\docker-compose.yml",
+              "RelativeDocumentMoniker": "docker-compose.yml",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\docker-compose.yml",
+              "RelativeToolTip": "docker-compose.yml",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAACgAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-11-02T22:14:16.455Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "Dockerfile",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Dockerfile",
+              "RelativeDocumentMoniker": "PaperlessOCR\\Dockerfile",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Dockerfile",
+              "RelativeToolTip": "PaperlessOCR\\Dockerfile",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-11-02T22:12:52.57Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Program.cs",
+              "RelativeDocumentMoniker": "PaperlessOCR\\Program.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Program.cs",
+              "RelativeToolTip": "PaperlessOCR\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB8AAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-02T21:49:53.073Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "Document.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Models\\Document.cs",
+              "RelativeDocumentMoniker": "PaperlessREST\\Models\\Document.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Models\\Document.cs",
+              "RelativeToolTip": "PaperlessREST\\Models\\Document.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-02T21:32:31.043Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 1,
               "Title": "RabbitConsumerService.cs",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\RabbitConsumerService.cs",
               "RelativeDocumentMoniker": "PaperlessOCR\\RabbitConsumerService.cs",
-              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\RabbitConsumerService.cs",
-              "RelativeToolTip": "PaperlessOCR\\RabbitConsumerService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAFYAAAAlAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\RabbitConsumerService.cs*",
+              "RelativeToolTip": "PaperlessOCR\\RabbitConsumerService.cs*",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAgwCcAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-02T18:49:16.465Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 16,
               "Title": "MinioStorage.cs",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Services\\MinioStorage.cs",
               "RelativeDocumentMoniker": "PaperlessREST\\Services\\MinioStorage.cs",
@@ -59,12 +277,11 @@
               "RelativeToolTip": "PaperlessREST\\Services\\MinioStorage.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAA1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-02T03:25:33.411Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-02T03:25:33.411Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 15,
               "Title": "MessageQueueService.cs",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Services\\MessageQueueService.cs",
               "RelativeDocumentMoniker": "PaperlessREST\\Services\\MessageQueueService.cs",
@@ -72,8 +289,7 @@
               "RelativeToolTip": "PaperlessREST\\Services\\MessageQueueService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAADwAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-12T17:38:01.616Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-12T17:38:01.616Z"
             },
             {
               "$type": "Document",
@@ -83,7 +299,7 @@
               "RelativeDocumentMoniker": "PaperlessREST\\Controllers\\DocumentsController.cs",
               "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Controllers\\DocumentsController.cs",
               "RelativeToolTip": "PaperlessREST\\Controllers\\DocumentsController.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAB4AAAAYAAAAAAAAAA==",
+              "ViewState": "AgIAAEsAAAAAAAAAAAAswGkAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-09T18:49:45.542Z",
               "EditorCaption": ""

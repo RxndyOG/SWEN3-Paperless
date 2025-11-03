@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Minio;
 using Minio.DataModel.Args;
+using PaperlessOCR.Abstractions;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
@@ -26,15 +27,21 @@ public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
     private readonly ILogger<RabbitConsumerService> _logger;
     private readonly RabbitOptions _opts;
     private readonly IMinioClient _minio;
+    private readonly IObjectFetcher _fetcher;
+    private readonly IOcrEngine _ocr;
+    private readonly IOcrResultSink _sink;
 
     private IConnection? _conn;
     private IModel? _channel;
 
-    public RabbitConsumerService(ILogger<RabbitConsumerService> logger, IOptions<RabbitOptions> opts, IMinioClient minio)
+    public RabbitConsumerService(ILogger<RabbitConsumerService> logger, IOptions<RabbitOptions> opts, IMinioClient minio, IObjectFetcher fetcher, IOcrEngine ocr, IOcrResultSink sink)
     {
         _logger = logger;
         _opts = opts.Value;
         _minio = minio;
+        _fetcher = fetcher;
+        _ocr = ocr;
+        _sink = sink;
     }
 
     public override async Task StartAsync(System.Threading.CancellationToken cancellationToken)
@@ -93,45 +100,8 @@ public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
             try
             {
                 var message = Encoding.UTF8.GetString(ea.Body.ToArray());
-                var payload = JsonSerializer.Deserialize<UploadedDocMessage>(message);
-                if (payload is null)
-                    throw new InvalidOperationException("Invalid message payload");
-
-                _logger.LogInformation("OCR: Received doc {Id} {File} ({Type})", payload.DocumentId, payload.FileName, payload.ContentType);
-
-                var tmpDir = Path.Combine(Path.GetTempPath(), "paperless-ocr");
-                Directory.CreateDirectory(tmpDir);
-                var tmpFile = Path.Combine(tmpDir, $"{Guid.NewGuid():N}-{payload.FileName}");
-
-                await using (var fs = File.Create(tmpFile))
-                {
-                    await _minio.GetObjectAsync(new Minio.DataModel.Args.GetObjectArgs()
-                        .WithBucket(payload.Bucket)
-                        .WithObject(payload.ObjectKey)
-                        .WithCallbackStream(s => s.CopyTo(fs)), cancellationToken: stoppingToken);
-                }
-
-                string text;
-                // pdftoppm -png -singlefile inPath outBase
-                var outBase = Path.Combine(tmpDir, Path.GetFileNameWithoutExtension(tmpFile));
-                RunOrThrow(
-                  "pdftoppm",
-                  $"-png -f 1 -l 1 \"{tmpFile}\" \"{outBase}\""
-                );
-
-                var png = outBase + "-1.png";
-
-                text = RunTesseractToText(png);
-
-                TryDelete(png);
-
-                _logger.LogInformation("OCR: Document {Id} text (first ~400 chars): {Preview}",
-                    payload.DocumentId,
-                    text.Length > 400 ? text.Substring(0, 400) + "..." : text);
-
-                // TODO: update DB with recognized text later
-
-                TryDelete(tmpFile);
+                var payload = JsonSerializer.Deserialize<UploadedDocMessage>(message)!;
+                await ProcessAsync(payload, stoppingToken);
 
                 _channel.BasicAck(ea.DeliveryTag, multiple: false);
             }
@@ -213,5 +183,11 @@ public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
         p.WaitForExit();
         if (p.ExitCode != 0)
             throw new InvalidOperationException($"{fileName} failed: {p.StandardError.ReadToEnd()}");
+    }
+    public async Task ProcessAsync(UploadedDocMessage payload, CancellationToken ct)
+    {
+        var path = await _fetcher.FetchToTempFileAsync(payload.Bucket, payload.ObjectKey, payload.FileName, ct);
+        var text = await _ocr.ExtractAsync(path, payload.ContentType, ct);
+        await _sink.OnOcrCompletedAsync(payload.DocumentId, text, ct);
     }
 }

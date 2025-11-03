@@ -24,6 +24,12 @@ PaperlessUI/dist/
 PaperlessUI/.angular/
 PaperlessUI/.vscode/
 
+# OCR testdata ignores
+PaperlessOCR/tessdata
+PaperlessOCR/x64
+PaperlessOCR/x86
+
+.vs/Paperless/v17
 
 # Logs
 *.log
