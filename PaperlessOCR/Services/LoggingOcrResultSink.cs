@@ -9,7 +9,7 @@ public class LoggingOcrResultSink : IOcrResultSink
     public Task OnOcrCompletedAsync(int documentId, string text, CancellationToken ct)
     {
         _log.LogInformation("OCR DONE for {Id}: {Preview}",
-            documentId, text.Length > 200 ? text[..200] + "..." : text);
+            documentId, text.Length > 10000 ? text[..200] + "..." : text);
         return Task.CompletedTask;
     }
 }
