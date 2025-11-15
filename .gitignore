@@ -65,6 +65,7 @@ BundleArtifacts/
 # User secrets / sensitive Daten
 secrets.json
 appsettings.json
+.env
 
 # Entity Framework
 Migrations/
@@ -78,3 +79,4 @@ _ReSharper*/
 *.coverage
 *.coveragexml
 TestResult*/
+/secrets.env
