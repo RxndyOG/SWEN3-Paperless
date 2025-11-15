@@ -22,9 +22,9 @@ public interface IRabbitConsumerService
 public record UploadedDocMessage(int DocumentId, string Bucket, string ObjectKey, string FileName, string ContentType);
 
 
-public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
+public class OcrConsumerService : BackgroundService, IRabbitConsumerService
 {
-    private readonly ILogger<RabbitConsumerService> _logger;
+    private readonly ILogger<OcrConsumerService> _logger;
     private readonly RabbitOptions _opts;
     private readonly IMinioClient _minio;
     private readonly IObjectFetcher _fetcher;
@@ -34,7 +34,7 @@ public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
     private IConnection? _conn;
     private IModel? _channel;
 
-    public RabbitConsumerService(ILogger<RabbitConsumerService> logger, IOptions<RabbitOptions> opts, IMinioClient minio, IObjectFetcher fetcher, IOcrEngine ocr, IOcrResultSink sink)
+    public OcrConsumerService(ILogger<OcrConsumerService> logger, IOptions<RabbitOptions> opts, IMinioClient minio, IObjectFetcher fetcher, IOcrEngine ocr, IOcrResultSink sink)
     {
         _logger = logger;
         _opts = opts.Value;

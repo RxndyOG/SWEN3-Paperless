@@ -164,6 +164,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
 
             doc.FileName = newDoc.FileName;
             doc.Content = newDoc.Content;
+            doc.SummarizedContent = newDoc.SummarizedContent;
 
             var changes = await _db.SaveChangesAsync();
             if (changes == 0)

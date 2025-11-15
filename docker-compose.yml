@@ -45,6 +45,17 @@ services:
       MINIO__SECRETKEY: ${MINIO__SECRETKEY}
       MINIO__USESSL: "false"
 
+  aiworker:
+    build: ./PaperlessAI
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER:-user}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_QUEUE: documents
+        
   rest:
     build: ./PaperlessRest
     ports:
