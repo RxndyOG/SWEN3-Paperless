@@ -31,6 +31,9 @@ PaperlessOCR/x86
 
 .vs/Paperless/v17
 
+# REST ignores
+PaperlessREST/obj/Debug/net8.0/
+
 # Logs
 *.log
 
@@ -62,6 +65,7 @@ BundleArtifacts/
 # User secrets / sensitive Daten
 secrets.json
 appsettings.json
+.env
 
 # Entity Framework
 Migrations/
@@ -75,3 +79,4 @@ _ReSharper*/
 *.coverage
 *.coveragexml
 TestResult*/
+/secrets.env
