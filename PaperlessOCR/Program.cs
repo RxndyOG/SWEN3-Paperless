@@ -15,7 +15,8 @@ builder.Services.Configure<RabbitOptions>(opts =>
     opts.Host = cfg["HOST"] ?? "rabbitmq";
     opts.User = cfg["USER"] ?? "user";
     opts.Pass = cfg["PASS"] ?? "pass";
-    opts.QueueName = cfg["QUEUE"] ?? "documents";
+    opts.InputQueue = cfg["INPUTQUEUE"] ?? QueueNames.Documents;
+    opts.OutputQueue = cfg["OCR_FINISHED_QUEUE"] ?? QueueNames.OcrFinished;
 });
 
 builder.Services.Configure<MinioOptions>(opts =>
@@ -29,7 +30,7 @@ builder.Services.Configure<MinioOptions>(opts =>
 
 builder.Services.AddSingleton<IObjectFetcher, MinioObjectFetcher>();
 builder.Services.AddSingleton<IOcrEngine, CliOcrEngine>();
-builder.Services.AddSingleton<IOcrResultSink, LoggingOcrResultSink>();
+builder.Services.AddSingleton<IOcrResultSink, RabbitMqResultSink>();
 builder.Services.AddHostedService<OcrConsumerService>();
 
 builder.Services.AddSingleton<IMinioClient>(sp =>
@@ -52,7 +53,8 @@ public class RabbitOptions
     public string Host { get; set; } = "rabbitmq";
     public string User { get; set; } = "user";
     public string Pass { get; set; } = "pass";
-    public string QueueName { get; set; } = "documents";
+    public string InputQueue { get; set; } = QueueNames.Documents;
+    public string OutputQueue { get; set; } = QueueNames.OcrFinished;
 }
 
 public class MinioOptions
@@ -61,4 +63,11 @@ public class MinioOptions
     public string AccessKey { get; set; } = "paperless";
     public string SecretKey { get; set; } = "paperlesssecret123";
     public bool UseSSL { get; set; } = false;
+}
+
+public static class QueueNames
+{
+    public const string Documents = "documents";
+    public const string OcrFinished = "ocr_finished";
+    public const string GenAiFinished = "genai_finished";
 }

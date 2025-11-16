@@ -39,7 +39,8 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER:-user}
       RABBITMQ_PASS: ${RABBITMQ_PASS}
-      RABBITMQ_QUEUE: documents
+      RABBITMQ_INPUTQUEUE: documents
+      RABBITMQ_OCR_FINISHED_QUEUE: ocr_finished
       MINIO__ENDPOINT: minio:9000
       MINIO__ACCESSKEY: ${MINIO__ACCESSKEY}
       MINIO__SECRETKEY: ${MINIO__SECRETKEY}
@@ -54,7 +55,8 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER:-user}
       RABBITMQ_PASS: ${RABBITMQ_PASS}
-      RABBITMQ_QUEUE: documents
+      RABBITMQ_INPUTQUEUE: ocr_finished
+      RABBITMQ_GENAI_FINISHED: genai_finished
         
   rest:
     build: ./PaperlessRest

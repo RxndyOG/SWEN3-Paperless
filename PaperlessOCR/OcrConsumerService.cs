@@ -60,7 +60,7 @@ public class OcrConsumerService : BackgroundService, IRabbitConsumerService
             _channel = _conn.CreateModel();
 
             _channel.QueueDeclare(
-                queue: _opts.QueueName,
+                queue: _opts.InputQueue,
                 durable: false,
                 exclusive: false,
                 autoDelete: false,
@@ -69,7 +69,7 @@ public class OcrConsumerService : BackgroundService, IRabbitConsumerService
             _channel.BasicQos(0, 1, false);
 
             _logger.LogInformation("Connected to RabbitMQ at {Host}. Listening on queue '{Queue}'",
-                _opts.Host, _opts.QueueName);
+                _opts.Host, _opts.InputQueue);
         }
         catch (BrokerUnreachableException ex)
         {
@@ -124,12 +124,12 @@ public class OcrConsumerService : BackgroundService, IRabbitConsumerService
 
         try
         {
-            _channel.BasicConsume(queue: _opts.QueueName, autoAck: false, consumer: consumer);
-            _logger.LogInformation("Started consuming queue '{Queue}'", _opts.QueueName);
+            _channel.BasicConsume(queue: _opts.InputQueue, autoAck: false, consumer: consumer);
+            _logger.LogInformation("Started consuming queue '{Queue}'", _opts.InputQueue);
         }
         catch (Exception ex)
         {
-            _logger.LogCritical(ex, "Failed to start consuming queue '{Queue}'", _opts.QueueName);
+            _logger.LogCritical(ex, "Failed to start consuming queue '{Queue}'", _opts.InputQueue);
             throw;
         }
 
@@ -184,6 +184,7 @@ public class OcrConsumerService : BackgroundService, IRabbitConsumerService
         if (p.ExitCode != 0)
             throw new InvalidOperationException($"{fileName} failed: {p.StandardError.ReadToEnd()}");
     }
+
     public async Task ProcessAsync(UploadedDocMessage payload, CancellationToken ct)
     {
         var path = await _fetcher.FetchToTempFileAsync(payload.Bucket, payload.ObjectKey, payload.FileName, ct);

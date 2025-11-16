@@ -102,7 +102,7 @@ public class OcrTests : IClassFixture<OcrFixture>
 
         // 2) Mocks + our container-based engine
         var logger = new LoggerFactory().CreateLogger<OcrConsumerService>();
-        var opts = Options.Create(new RabbitOptions { QueueName = "documents" });
+        var opts = Options.Create(new RabbitOptions { InputQueue = "documents" });
 
         var fetcher = new Mock<IObjectFetcher>();
         fetcher.Setup(f => f.FetchToTempFileAsync("bucket", "key", "file.png", It.IsAny<CancellationToken>()))

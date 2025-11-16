@@ -1,5 +1,6 @@
 using PaperlessAI;
 using RabbitMQ.Client;
+using System.Runtime.InteropServices;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -11,7 +12,8 @@ builder.Services.Configure<RabbitOptions>(opts =>
     opts.Host = cfg["HOST"] ?? "rabbitmq";
     opts.User = cfg["USER"] ?? "user";
     opts.Pass = cfg["PASS"] ?? "pass";
-    opts.QueueName = cfg["QUEUE"] ?? "documents";
+    opts.InputQueue = cfg["INPUTQUEUE"] ?? QueueNames.OcrFinished;
+    opts.OutputQueue = cfg["GENAI_FINISHED"] ?? QueueNames.GenAiFinished;
 });
 
 builder.Services.AddHostedService<AiConsumerService>();
@@ -25,5 +27,12 @@ public class RabbitOptions
     public string Host { get; set; } = "rabbitmq";
     public string User { get; set; } = "user";
     public string Pass { get; set; } = "pass";
-    public string QueueName { get; set; } = "documents";
+    public string InputQueue { get; set; } = QueueNames.OcrFinished;
+    public string OutputQueue { get; set; } = QueueNames.GenAiFinished;
+}
+
+public class QueueNames
+{
+    public const string OcrFinished = "ocr_finished";
+    public const string GenAiFinished = "genai_finished";
 }

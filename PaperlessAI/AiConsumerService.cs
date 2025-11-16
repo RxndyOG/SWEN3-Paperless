@@ -16,7 +16,7 @@ namespace PaperlessAI
         private readonly ILogger<AiConsumerService> _logger;
         private readonly RabbitOptions _opts;
 
-        private IConnection _conn;
+        private IConnection? _conn;
         private IModel? _channel;
         public AiConsumerService(ILogger<AiConsumerService> logger, IOptions<RabbitOptions> opts)
         {
@@ -40,7 +40,7 @@ namespace PaperlessAI
                 _channel = _conn.CreateModel();
 
                 _channel.QueueDeclare(
-                    queue: _opts.QueueName,
+                    queue: _opts.InputQueue,
                     durable: false,
                     exclusive: false,
                     autoDelete: false,
@@ -49,7 +49,7 @@ namespace PaperlessAI
                 _channel.BasicQos(0, 1, false);
 
                 _logger.LogInformation("Connected to RabbitMQ at {Host}. Listening on queue '{Queue}'",
-                    _opts.Host, _opts.QueueName);
+                    _opts.Host, _opts.InputQueue);
             }
             catch (BrokerUnreachableException ex)
             {
@@ -104,12 +104,12 @@ namespace PaperlessAI
 
             try
             {
-                _channel.BasicConsume(queue: _opts.QueueName, autoAck: false, consumer: consumer);
-                _logger.LogInformation("Started consuming queue '{Queue}'", _opts.QueueName);
+                _channel.BasicConsume(queue: _opts.InputQueue, autoAck: false, consumer: consumer);
+                _logger.LogInformation("Started consuming queue '{Queue}'", _opts.InputQueue);
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex, "Failed to start consuming queue '{Queue}'", _opts.QueueName);
+                _logger.LogCritical(ex, "Failed to start consuming queue '{Queue}'", _opts.InputQueue);
                 throw;
             }
 
