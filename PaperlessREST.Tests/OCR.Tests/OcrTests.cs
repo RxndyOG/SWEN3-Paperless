@@ -101,8 +101,8 @@ public class OcrTests : IClassFixture<OcrFixture>
         }
 
         // 2) Mocks + our container-based engine
-        var logger = new LoggerFactory().CreateLogger<RabbitConsumerService>();
-        var opts = Options.Create(new RabbitOptions { QueueName = "documents" });
+        var logger = new LoggerFactory().CreateLogger<OcrConsumerService>();
+        var opts = Options.Create(new RabbitOptions { InputQueue = "documents" });
 
         var fetcher = new Mock<IObjectFetcher>();
         fetcher.Setup(f => f.FetchToTempFileAsync("bucket", "key", "file.png", It.IsAny<CancellationToken>()))
@@ -112,7 +112,7 @@ public class OcrTests : IClassFixture<OcrFixture>
         var sink = new CapturingSink();
         var minio = new Mock<IMinioClient>(); // if ctor still requires it
 
-        var worker = new RabbitConsumerService(logger, opts, minio.Object, fetcher.Object, ocr, sink);
+        var worker = new OcrConsumerService(logger, opts, minio.Object, fetcher.Object, ocr, sink);
 
         var payload = new UploadedDocMessage(
             DocumentId: 77,

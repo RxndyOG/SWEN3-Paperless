@@ -56,7 +56,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
         }
     }
 
-    // Accept only PDF files (enforced). Stores the file in MinIO and metadata in DB.
+    //Accept only PDF files (enforced). Stores the file in MinIO and metadata in DB.
     [HttpPost]
     public async Task<IActionResult> Upload([FromForm] IFormFile file)
     {
@@ -66,7 +66,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
         if (file.Length == 0)
             return BadRequest("File is empty.");
 
-        // Enforce PDF only. Accept if content-type indicates PDF or filename ends with .pdf
+        //Enforce PDF only. Accept if content-type indicates PDF or filename ends with .pdf
         var isPdfContentType = string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase);
         var hasPdfExtension = file.FileName?.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) == true;
 
@@ -90,7 +90,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
             {
                 FileName = Path.GetFileName(file.FileName),
                 ObjectKey = objectKey,
-                ContentType = "application/pdf", // enforce PDF type in metadata
+                ContentType = "application/pdf", //enforce PDF type in metadata
                 SizeBytes = file.Length,
                 CreatedAt = DateTime.UtcNow
             };
@@ -102,13 +102,13 @@ public class DocumentsController : ControllerBase, IDocumentsController
             { 
                 var msg = new UploadedDocMessage(
                     doc.Id,
-                    Bucket: "documents", // or read from config
+                    Bucket: "documents", //or read from config
                     objectKey,
-                    doc.FileName,
+                    doc.FileName!,
                     doc.ContentType ?? "application/pdf");
 
-                _mq.Publish(JsonSerializer.Serialize(msg));
-                _logger.LogInformation("Published upload message for document id {Id}", doc.Id);
+                _mq.PublishTo(JsonSerializer.Serialize(msg), QueueNames.Documents);
+                _logger.LogInformation("Published upload message for document id {Id} to {Queue}", doc.Id, QueueNames.Documents);
             }
             catch (Exception mqEx)
             {
@@ -164,6 +164,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
 
             doc.FileName = newDoc.FileName;
             doc.Content = newDoc.Content;
+            doc.SummarizedContent = newDoc.SummarizedContent;
 
             var changes = await _db.SaveChangesAsync();
             if (changes == 0)
@@ -283,15 +284,6 @@ public class DocumentsController : ControllerBase, IDocumentsController
             {
                 _logger.LogWarning("No DB changes when deleting document {Id}", id);
                 return StatusCode(StatusCodes.Status500InternalServerError, "Failed to delete document record");
-            }
-
-            try
-            {
-                _mq.Publish($"Document deleted: {doc.FileName} (ID: {doc.Id})");
-            }
-            catch (Exception mqEx)
-            {
-                _logger.LogWarning(mqEx, "Failed to publish delete message for document {Id}", id);
             }
 
             _logger.LogInformation("Deleted document {Id} and its object {Key}", id, doc.ObjectKey);

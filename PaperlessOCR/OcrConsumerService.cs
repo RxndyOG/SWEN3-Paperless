@@ -22,9 +22,9 @@ public interface IRabbitConsumerService
 public record UploadedDocMessage(int DocumentId, string Bucket, string ObjectKey, string FileName, string ContentType);
 
 
-public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
+public class OcrConsumerService : BackgroundService, IRabbitConsumerService
 {
-    private readonly ILogger<RabbitConsumerService> _logger;
+    private readonly ILogger<OcrConsumerService> _logger;
     private readonly RabbitOptions _opts;
     private readonly IMinioClient _minio;
     private readonly IObjectFetcher _fetcher;
@@ -34,7 +34,7 @@ public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
     private IConnection? _conn;
     private IModel? _channel;
 
-    public RabbitConsumerService(ILogger<RabbitConsumerService> logger, IOptions<RabbitOptions> opts, IMinioClient minio, IObjectFetcher fetcher, IOcrEngine ocr, IOcrResultSink sink)
+    public OcrConsumerService(ILogger<OcrConsumerService> logger, IOptions<RabbitOptions> opts, IMinioClient minio, IObjectFetcher fetcher, IOcrEngine ocr, IOcrResultSink sink)
     {
         _logger = logger;
         _opts = opts.Value;
@@ -60,7 +60,7 @@ public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
             _channel = _conn.CreateModel();
 
             _channel.QueueDeclare(
-                queue: _opts.QueueName,
+                queue: _opts.InputQueue,
                 durable: false,
                 exclusive: false,
                 autoDelete: false,
@@ -69,7 +69,7 @@ public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
             _channel.BasicQos(0, 1, false);
 
             _logger.LogInformation("Connected to RabbitMQ at {Host}. Listening on queue '{Queue}'",
-                _opts.Host, _opts.QueueName);
+                _opts.Host, _opts.InputQueue);
         }
         catch (BrokerUnreachableException ex)
         {
@@ -124,12 +124,12 @@ public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
 
         try
         {
-            _channel.BasicConsume(queue: _opts.QueueName, autoAck: false, consumer: consumer);
-            _logger.LogInformation("Started consuming queue '{Queue}'", _opts.QueueName);
+            _channel.BasicConsume(queue: _opts.InputQueue, autoAck: false, consumer: consumer);
+            _logger.LogInformation("Started consuming queue '{Queue}'", _opts.InputQueue);
         }
         catch (Exception ex)
         {
-            _logger.LogCritical(ex, "Failed to start consuming queue '{Queue}'", _opts.QueueName);
+            _logger.LogCritical(ex, "Failed to start consuming queue '{Queue}'", _opts.InputQueue);
             throw;
         }
 
@@ -167,6 +167,7 @@ public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
         return output;
     }
 
+    /*
     private static void TryDelete(string path)
     {
         try { if (File.Exists(path)) File.Delete(path); } catch { }
@@ -184,6 +185,8 @@ public class RabbitConsumerService : BackgroundService, IRabbitConsumerService
         if (p.ExitCode != 0)
             throw new InvalidOperationException($"{fileName} failed: {p.StandardError.ReadToEnd()}");
     }
+    */
+
     public async Task ProcessAsync(UploadedDocMessage payload, CancellationToken ct)
     {
         var path = await _fetcher.FetchToTempFileAsync(payload.Bucket, payload.ObjectKey, payload.FileName, ct);

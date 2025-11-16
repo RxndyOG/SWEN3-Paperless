@@ -66,6 +66,7 @@ BundleArtifacts/
 secrets.json
 appsettings.json
 .env
+appsettings.Development.json
 
 # Entity Framework
 Migrations/
@@ -80,3 +81,4 @@ _ReSharper*/
 *.coveragexml
 TestResult*/
 /secrets.env
+/PaperlessREST/appsettings.Development.json

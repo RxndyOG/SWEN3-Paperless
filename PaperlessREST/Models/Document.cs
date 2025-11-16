@@ -9,5 +9,6 @@ public class Document
     public string ObjectKey { get; set; } = "";
     public string ContentType { get; set; } = "application/pdf";
     public long SizeBytes { get; set; }
+    public string SummarizedContent { get; set; } = string.Empty;
 }
 

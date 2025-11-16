@@ -6,7 +6,7 @@ namespace PaperlessREST.Services;
 
 public interface IMessageQueueService
 {
-    void Publish(string message);
+    void PublishTo(string message, string queueName);
 }
 
 public class MessageQueueService : IMessageQueueService, IDisposable
@@ -33,13 +33,26 @@ public class MessageQueueService : IMessageQueueService, IDisposable
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
 
-            _channel.QueueDeclare(queue: "documents",
+            _channel.QueueDeclare(queue: QueueNames.Documents,
                                   durable: false,
                                   exclusive: false,
                                   autoDelete: false,
                                   arguments: null);
 
-            _logger.LogInformation("RabbitMQ connection established and queue declared.");
+            _channel.QueueDeclare(queue: QueueNames.OcrFinished,
+                                  durable: false,
+                                  exclusive: false,
+                                  autoDelete: false,
+                                  arguments: null);
+
+            _channel.QueueDeclare(queue: QueueNames.GenAiFinished,
+                                  durable: false,
+                                  exclusive: false,
+                                  autoDelete: false,
+                                  arguments: null
+                );
+
+            _logger.LogInformation("RabbitMQ connection established and queues declared.");
         }
         catch (Exception ex)
         {
@@ -48,20 +61,22 @@ public class MessageQueueService : IMessageQueueService, IDisposable
         }
     }
 
-    public void Publish(string message)
+    public void PublishTo(string message, string queueName)
     {
         try
         {
             var body = Encoding.UTF8.GetBytes(message);
+
             _channel.BasicPublish(exchange: "",
-                                  routingKey: "documents",
+                                  routingKey: queueName,
                                   basicProperties: null,
                                   body: body);
-            _logger.LogInformation("Message published to queue: {Message}", message);
+
+            _logger.LogInformation($"Message published to {queueName}: {message}");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to publish message: {Message}", message);
+            _logger.LogError(ex, $"Failed to publish message: {message}");
             throw;
         }
     }
@@ -81,4 +96,11 @@ public class MessageQueueService : IMessageQueueService, IDisposable
         }
         _disposed = true;
     }
+}
+
+public static class QueueNames
+{
+    public const string Documents = "documents";
+    public const string OcrFinished = "ocr_finished";
+    public const string GenAiFinished = "genai_finished";
 }
