@@ -167,6 +167,7 @@ public class OcrConsumerService : BackgroundService, IRabbitConsumerService
         return output;
     }
 
+    /*
     private static void TryDelete(string path)
     {
         try { if (File.Exists(path)) File.Delete(path); } catch { }
@@ -184,6 +185,7 @@ public class OcrConsumerService : BackgroundService, IRabbitConsumerService
         if (p.ExitCode != 0)
             throw new InvalidOperationException($"{fileName} failed: {p.StandardError.ReadToEnd()}");
     }
+    */
 
     public async Task ProcessAsync(UploadedDocMessage payload, CancellationToken ct)
     {

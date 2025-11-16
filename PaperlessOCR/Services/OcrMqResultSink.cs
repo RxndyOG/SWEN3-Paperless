@@ -5,14 +5,14 @@ using System.Text;
 using PaperlessOCR.Abstractions;
 using System.Text.Json;
 
-public class RabbitMqResultSink : IOcrResultSink, IDisposable
+public class OcrMqResultSink : IOcrResultSink, IDisposable
 {
-    private readonly ILogger<RabbitMqResultSink> _log;
+    private readonly ILogger<OcrMqResultSink> _log;
     private readonly IConnection _connection;
     private readonly IModel _channel;
     private readonly RabbitOptions _options;
 
-    public RabbitMqResultSink(ILogger<RabbitMqResultSink> log, IOptions<RabbitOptions> options)
+    public OcrMqResultSink(ILogger<OcrMqResultSink> log, IOptions<RabbitOptions> options)
     {
         _log = log;
         _options = options.Value;
@@ -39,7 +39,9 @@ public class RabbitMqResultSink : IOcrResultSink, IDisposable
     {
         _log.LogInformation("OCR finished: {ocrText}", text);
 
-        var payload = JsonSerializer.Serialize(text);
+        var message = new OcrCompletedMessage { id = documentId, text = text };
+
+        var payload = JsonSerializer.Serialize(message);
         var body = Encoding.UTF8.GetBytes(payload);
 
         _channel.BasicPublish(
@@ -57,4 +59,10 @@ public class RabbitMqResultSink : IOcrResultSink, IDisposable
         _channel?.Close();
         _connection?.Close();
     }
+}
+
+public class OcrCompletedMessage
+{
+    public int id { get; set; }
+    public required string text { get; set; }
 }

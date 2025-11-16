@@ -30,7 +30,7 @@ builder.Services.Configure<MinioOptions>(opts =>
 
 builder.Services.AddSingleton<IObjectFetcher, MinioObjectFetcher>();
 builder.Services.AddSingleton<IOcrEngine, CliOcrEngine>();
-builder.Services.AddSingleton<IOcrResultSink, RabbitMqResultSink>();
+builder.Services.AddSingleton<IOcrResultSink, OcrMqResultSink>();
 builder.Services.AddHostedService<OcrConsumerService>();
 
 builder.Services.AddSingleton<IMinioClient>(sp =>

@@ -8,6 +8,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
+using GenerativeAI.Types.RagEngine;
+using GenerativeAI;
+using PaperlessAI.Abstractions;
+using PaperlessAI.Services;
 
 namespace PaperlessAI
 {
@@ -15,13 +19,17 @@ namespace PaperlessAI
     {
         private readonly ILogger<AiConsumerService> _logger;
         private readonly RabbitOptions _opts;
+        private readonly IGenAiEngine _genEngine;
+        private readonly IGenAiResultSink _genResultSink;
 
         private IConnection? _conn;
         private IModel? _channel;
-        public AiConsumerService(ILogger<AiConsumerService> logger, IOptions<RabbitOptions> opts)
+        public AiConsumerService(ILogger<AiConsumerService> logger, IOptions<RabbitOptions> opts, IOptions<GenAiOptions> genOptions, IGenAiEngine genEngine, IGenAiResultSink genResultSink)
         {
             _logger = logger;
             _opts = opts.Value;
+            _genEngine = genEngine;
+            _genResultSink = genResultSink;
         }
 
         public override async Task StartAsync(System.Threading.CancellationToken cancellationToken)
@@ -65,7 +73,7 @@ namespace PaperlessAI
             await base.StartAsync(cancellationToken);
         }
 
-        protected override Task ExecuteAsync(System.Threading.CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(System.Threading.CancellationToken ct)
         {
             if (_channel is null)
             {
@@ -79,9 +87,9 @@ namespace PaperlessAI
                 var tag = ea.DeliveryTag;
                 try
                 {
-                    //var message = Encoding.UTF8.GetString(ea.Body.ToArray());
-                    //var payload = JsonSerializer.Deserialize<UploadedDocMessage>(message)!;
-                    await ProcessAsync();
+                    var message = Encoding.UTF8.GetString(ea.Body.ToArray());
+                    var payload = JsonSerializer.Deserialize<OcrMessage>(message)!;
+                    await ProcessAsync(payload, ct);
 
                     _channel.BasicAck(ea.DeliveryTag, multiple: false);
                 }
@@ -116,9 +124,18 @@ namespace PaperlessAI
             return Task.CompletedTask;
         }
 
-        public async Task ProcessAsync()
+        public async Task ProcessAsync(OcrMessage message, CancellationToken ct)
         {
-            _logger.LogInformation("ProcessAsync Successfully reached.");
+            _logger.LogInformation("Received text from OCR: ID = {id}\n {text}", message.id, message.text);
+            var summary = await _genEngine.SummarizeAsync(message.text, ct);
+            _logger.LogInformation("Response from Gemini: {response}", summary);
+            await _genResultSink.OnGeminiCompletedAsync(message.id, summary, ct);
         }
+    }
+
+    public class OcrMessage
+    {
+        public int id { get; set; }
+        public required string text { get; set; }
     }
 }

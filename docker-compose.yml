@@ -57,6 +57,7 @@ services:
       RABBITMQ_PASS: ${RABBITMQ_PASS}
       RABBITMQ_INPUTQUEUE: ocr_finished
       RABBITMQ_GENAI_FINISHED: genai_finished
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
         
   rest:
     build: ./PaperlessRest

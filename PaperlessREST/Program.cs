@@ -18,6 +18,9 @@ builder.Services.AddSingleton<IObjectStorage>(sp =>
     return storage;
 });
 
+builder.Services.AddHostedService<MessageConsumerService>();
+
+
 builder.Services.AddControllers();
 var app = builder.Build();
 

@@ -171,6 +171,19 @@
               🗑️
             </button>
           </div>
+
+          <!-- Document Summary -->
+          <div class="doc-summary" *ngIf="doc">
+            <div *ngIf="doc.summary; else summaryPending" class="summary-text fade-in">
+              <strong>Summary:</strong>
+              <div [innerText]="doc.summary"></div>
+            </div>
+            <ng-template #summaryPending>
+              <div class="summary-pending loading-pulse" *ngIf="!doc.summary">
+                <em>Summary is being generated...</em>
+              </div>
+            </ng-template>
+          </div>
         </div>
       </div>
     </div>

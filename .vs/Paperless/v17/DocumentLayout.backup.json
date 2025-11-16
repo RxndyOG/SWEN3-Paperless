@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessrest.tests\\ocr.tests\\ocrtests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81800661-E402-B188-427A-1FBD123F6D70}|PaperlessREST.Tests\\PaperlessREST.Tests.csproj|solutionrelative:paperlessrest.tests\\ocr.tests\\ocrtests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{039CF92E-9EDE-437F-804D-6880BFDD8F2A}|PaperlessAI\\PaperlessAI.csproj|c:\\users\\danie\\source\\repos\\swen3-paperless\\paperlessai\\aiconsumerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{039CF92E-9EDE-437F-804D-6880BFDD8F2A}|PaperlessAI\\PaperlessAI.csproj|solutionrelative:paperlessai\\aiconsumerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -58,11 +62,24 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 12,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
+              "Title": "OcrTests.cs",
+              "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\OCR.Tests\\OcrTests.cs",
+              "RelativeDocumentMoniker": "PaperlessREST.Tests\\OCR.Tests\\OcrTests.cs",
+              "ToolTip": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST.Tests\\OCR.Tests\\OcrTests.cs",
+              "RelativeToolTip": "PaperlessREST.Tests\\OCR.Tests\\OcrTests.cs",
+              "ViewState": "AgIAAE8AAAAAAAAAAAD4v2wAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-16T03:38:02.562Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "CliOcrEngine.cs",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Services\\CliOcrEngine.cs",
               "RelativeDocumentMoniker": "PaperlessOCR\\Services\\CliOcrEngine.cs",
@@ -75,7 +92,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "docker-compose.yml",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\docker-compose.yml",
               "RelativeDocumentMoniker": "docker-compose.yml",
@@ -88,7 +105,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessAI\\Program.cs",
               "RelativeDocumentMoniker": "PaperlessAI\\Program.cs",
@@ -101,7 +118,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Program.cs",
               "RelativeDocumentMoniker": "PaperlessOCR\\Program.cs",
@@ -114,7 +131,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "MinioObjectFetcher.cs",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Services\\MinioObjectFetcher.cs",
               "RelativeDocumentMoniker": "PaperlessOCR\\Services\\MinioObjectFetcher.cs",
@@ -127,7 +144,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "RabbitMqResultSink.cs",
               "DocumentMoniker": "C:\\Users\\danie\\Source\\Repos\\SWEN3-Paperless\\PaperlessOCR\\Services\\RabbitMqResultSink.cs",
               "RelativeDocumentMoniker": "PaperlessOCR\\Services\\RabbitMqResultSink.cs",
@@ -140,7 +157,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "DocumentsController.cs",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Controllers\\DocumentsController.cs",
               "RelativeDocumentMoniker": "PaperlessREST\\Controllers\\DocumentsController.cs",
@@ -153,7 +170,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "MessageQueueService.cs",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\Services\\MessageQueueService.cs",
               "RelativeDocumentMoniker": "PaperlessREST\\Services\\MessageQueueService.cs",
@@ -174,7 +191,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "appsettings.Development.json",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessREST\\appsettings.Development.json",
               "RelativeDocumentMoniker": "PaperlessREST\\appsettings.Development.json",
@@ -186,7 +203,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Dockerfile",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\Dockerfile",
               "RelativeDocumentMoniker": "PaperlessOCR\\Dockerfile",
@@ -199,7 +216,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "AiConsumerService.cs",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessAI\\AiConsumerService.cs",
               "RelativeDocumentMoniker": "PaperlessAI\\AiConsumerService.cs",
@@ -212,7 +229,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "OcrConsumerService.cs",
               "DocumentMoniker": "C:\\Users\\danie\\source\\repos\\SWEN3-Paperless\\PaperlessOCR\\OcrConsumerService.cs",
               "RelativeDocumentMoniker": "PaperlessOCR\\OcrConsumerService.cs",
