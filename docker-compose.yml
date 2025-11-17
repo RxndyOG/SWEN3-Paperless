@@ -31,7 +31,9 @@ services:
       retries: 5
 
   ocrworker:
-    build: ./PaperlessOCR
+    build:
+        context: .
+        dockerfile: PaperlessOCR/Dockerfile
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -47,7 +49,9 @@ services:
       MINIO__USESSL: "false"
 
   aiworker:
-    build: ./PaperlessAI
+    build: 
+        context: .
+        dockerfile: PaperlessAI/Dockerfile
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -60,7 +64,9 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
         
   rest:
-    build: ./PaperlessRest
+    build: 
+        context: .
+        dockerfile: PaperlessRest/Dockerfile
     ports:
       - "5281:8080"
     environment:

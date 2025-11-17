@@ -6,6 +6,7 @@ using PaperlessREST.Data;
 using PaperlessREST.Models;
 using PaperlessREST.Services;
 using System.Text.Json;
+using Paperless.Contracts;
 
 namespace PaperlessREST.Controllers;
 
@@ -13,7 +14,6 @@ public interface IDocumentsController
 {
     Task<IActionResult> GetAll();
     Task<IActionResult> Upload([FromForm] IFormFile file);
-    Task<IActionResult> UpdateDocument(int id, Document newDoc);
     Task<IActionResult> GetDocById(int id);
     Task<IActionResult> DeleteDocById(int id);
 }
@@ -147,46 +147,6 @@ public class DocumentsController : ControllerBase, IDocumentsController
         }
     }
 
-    //legacy endpoint - likely wont update a document -> delete and insert new one instead
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> UpdateDocument(int id, [FromBody] Document newDoc)
-    {
-        if (newDoc is null) return BadRequest("Document payload is required.");
-
-        try
-        {
-            var doc = await _db.Documents.FindAsync(id);
-            if (doc == null)
-            {
-                _logger.LogInformation("Document {Id} not found for update", id);
-                return NotFound();
-            }
-
-            doc.FileName = newDoc.FileName;
-            doc.Content = newDoc.Content;
-            doc.SummarizedContent = newDoc.SummarizedContent;
-
-            var changes = await _db.SaveChangesAsync();
-            if (changes == 0)
-            {
-                _logger.LogWarning("No changes persisted when updating document {Id}", id);
-                return BadRequest("No changes were persisted.");
-            }
-
-            _logger.LogInformation("Updated document {Id}", id);
-            return NoContent();
-        }
-        catch (DbUpdateException dbEx)
-        {
-            _logger.LogError(dbEx, "Database error while updating document {Id}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError, "Database error");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error while updating document {Id}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error");
-        }
-    }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetDocById(int id)
@@ -300,6 +260,48 @@ public class DocumentsController : ControllerBase, IDocumentsController
             return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error");
         }
     }
+
+
+    //legacy endpoint - likely wont update a document -> delete and insert new one instead
+    /*[HttpPut("{id:int}")]
+    public async Task<IActionResult> UpdateDocument(int id, [FromBody] Document newDoc)
+    {
+        if (newDoc is null) return BadRequest("Document payload is required.");
+
+        try
+        {
+            var doc = await _db.Documents.FindAsync(id);
+            if (doc == null)
+            {
+                _logger.LogInformation("Document {Id} not found for update", id);
+                return NotFound();
+            }
+
+            doc.FileName = newDoc.FileName;
+            doc.Content = newDoc.Content;
+            doc.SummarizedContent = newDoc.SummarizedContent;
+
+            var changes = await _db.SaveChangesAsync();
+            if (changes == 0)
+            {
+                _logger.LogWarning("No changes persisted when updating document {Id}", id);
+                return BadRequest("No changes were persisted.");
+            }
+
+            _logger.LogInformation("Updated document {Id}", id);
+            return NoContent();
+        }
+        catch (DbUpdateException dbEx)
+        {
+            _logger.LogError(dbEx, "Database error while updating document {Id}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Database error");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while updating document {Id}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error");
+        }
+    }*/
 }
 
 

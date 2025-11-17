@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "HWJYGEWN/D4=",
+  "dgSpecHash": "58eDMFOzIdM=",
   "success": true,
-  "projectFilePath": "C:\\Users\\danie\\Source\\Repos\\SWEN3-Paperless\\PaperlessREST\\PaperlessREST.csproj",
+  "projectFilePath": "C:\\Users\\danie\\Source\\Repos\\SWEN3-Paperless\\PaperlessREST\\Paperless.REST.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\danie\\.nuget\\packages\\communitytoolkit.highperformance\\8.4.0\\communitytoolkit.highperformance.8.4.0.nupkg.sha512",
     "C:\\Users\\danie\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
@@ -42,7 +42,6 @@
     "C:\\Users\\danie\\.nuget\\packages\\system.composition.hosting\\6.0.0\\system.composition.hosting.6.0.0.nupkg.sha512",
     "C:\\Users\\danie\\.nuget\\packages\\system.composition.runtime\\6.0.0\\system.composition.runtime.6.0.0.nupkg.sha512",
     "C:\\Users\\danie\\.nuget\\packages\\system.composition.typedparts\\6.0.0\\system.composition.typedparts.6.0.0.nupkg.sha512",
-    "C:\\Users\\danie\\.nuget\\packages\\system.diagnostics.diagnosticsource\\9.0.4\\system.diagnostics.diagnosticsource.9.0.4.nupkg.sha512",
     "C:\\Users\\danie\\.nuget\\packages\\system.io.hashing\\9.0.4\\system.io.hashing.9.0.4.nupkg.sha512",
     "C:\\Users\\danie\\.nuget\\packages\\system.io.pipelines\\6.0.3\\system.io.pipelines.6.0.3.nupkg.sha512",
     "C:\\Users\\danie\\.nuget\\packages\\system.memory\\4.5.5\\system.memory.4.5.5.nupkg.sha512",

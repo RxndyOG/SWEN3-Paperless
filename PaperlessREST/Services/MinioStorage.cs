@@ -2,18 +2,10 @@
 using Minio.DataModel.Args;
 using Minio.Exceptions;
 using System.Security.Cryptography;
+using Paperless.Contracts;
 
 namespace PaperlessREST.Services
 {
-    public sealed class MinioOptions
-    {
-        public string Endpoint { get; set; } = "minio:9000";
-        public string AccessKey { get; set; } = "";
-        public string SecretKey { get; set; } = "";
-        public string Bucket { get; set; } = "documents";
-        public bool UseSSL { get; set; } = false;
-    }
-
     public interface IObjectStorage
     {
         Task EnsureBucketAsync(CancellationToken ct = default);

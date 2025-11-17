@@ -1,4 +1,9 @@
-﻿using Microsoft.Extensions.Options;
+﻿using GenerativeAI;
+using GenerativeAI.Types.RagEngine;
+using Microsoft.Extensions.Options;
+using Paperless.Contracts;
+using PaperlessAI.Abstractions;
+using PaperlessAI.Services;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
@@ -6,12 +11,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Text.Json;
-using GenerativeAI.Types.RagEngine;
-using GenerativeAI;
-using PaperlessAI.Abstractions;
-using PaperlessAI.Services;
+using System.Threading.Tasks;
 
 namespace PaperlessAI
 {
@@ -88,7 +89,8 @@ namespace PaperlessAI
                 try
                 {
                     var message = Encoding.UTF8.GetString(ea.Body.ToArray());
-                    var payload = JsonSerializer.Deserialize<OcrMessage>(message)!;
+                    _logger.LogInformation("Raw message from ocr_finished: {json}", message);
+                    var payload = JsonSerializer.Deserialize<OcrCompletedMessage>(message)!;
                     await ProcessAsync(payload, ct);
 
                     _channel.BasicAck(ea.DeliveryTag, multiple: false);
@@ -124,18 +126,12 @@ namespace PaperlessAI
             return Task.CompletedTask;
         }
 
-        public async Task ProcessAsync(OcrMessage message, CancellationToken ct)
+        public async Task ProcessAsync(OcrCompletedMessage message, CancellationToken ct)
         {
-            _logger.LogInformation("Received text from OCR: ID = {id}\n {text}", message.id, message.text);
-            var summary = await _genEngine.SummarizeAsync(message.text, ct);
+            _logger.LogInformation("Received text from OCR: ID = {id}\n {text}", message.DocumentId, message.Text);
+            var summary = await _genEngine.SummarizeAsync(message.Text, ct);
             _logger.LogInformation("Response from Gemini: {response}", summary);
-            await _genResultSink.OnGeminiCompletedAsync(message.id, summary, ct);
+            await _genResultSink.OnGeminiCompletedAsync(message.DocumentId, summary, ct);
         }
-    }
-
-    public class OcrMessage
-    {
-        public int id { get; set; }
-        public required string text { get; set; }
     }
 }

@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Text.Json;
+using Paperless.Contracts;
 
 namespace PaperlessAI.Services
 {
@@ -46,8 +47,8 @@ namespace PaperlessAI.Services
         {
             _log.LogInformation("Reached ResultSink! {id}, {text}", documentId, text);
 
-            var message = new SummarizedText { Summary = text, DocumentId = documentId };
-            var payload = JsonSerializer.Serialize<SummarizedText>(message);
+            var message = new GenAiSummaryMessage{ DocumentId = documentId, Summary = text};
+            var payload = JsonSerializer.Serialize<GenAiSummaryMessage>(message);
             var body = Encoding.UTF8.GetBytes(payload);
 
             _channel.BasicPublish(
@@ -68,10 +69,5 @@ namespace PaperlessAI.Services
             _channel?.Close();
             _connection?.Close();
         }
-    }
-    public class SummarizedText
-    {
-        public required string Summary { get; set; }
-        public int DocumentId { get; set; }
     }
 }

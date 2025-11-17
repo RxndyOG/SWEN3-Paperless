@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using System.Text;
+using Paperless.Contracts;
 
 namespace PaperlessREST.Services;
 
@@ -11,9 +12,9 @@ public interface IMessageQueueService
 
 public class MessageQueueService : IMessageQueueService, IDisposable
 {
-    private readonly IConnection _connection;
-    private readonly IModel _channel;
-    private readonly ILogger<MessageQueueService> _logger;
+    private readonly IConnection? _connection;
+    private readonly IModel? _channel;
+    private readonly ILogger<MessageQueueService>? _logger;
     private bool _disposed;
 
 
@@ -96,11 +97,4 @@ public class MessageQueueService : IMessageQueueService, IDisposable
         }
         _disposed = true;
     }
-}
-
-public static class QueueNames
-{
-    public const string Documents = "documents";
-    public const string OcrFinished = "ocr_finished";
-    public const string GenAiFinished = "genai_finished";
 }

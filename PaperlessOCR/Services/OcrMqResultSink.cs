@@ -4,6 +4,7 @@ using RabbitMQ.Client;
 using System.Text;
 using PaperlessOCR.Abstractions;
 using System.Text.Json;
+using Paperless.Contracts;
 
 public class OcrMqResultSink : IOcrResultSink, IDisposable
 {
@@ -39,7 +40,7 @@ public class OcrMqResultSink : IOcrResultSink, IDisposable
     {
         _log.LogInformation("OCR finished: {ocrText}", text);
 
-        var message = new OcrCompletedMessage { id = documentId, text = text };
+        var message = new OcrCompletedMessage { DocumentId = documentId, Text = text };
 
         var payload = JsonSerializer.Serialize(message);
         var body = Encoding.UTF8.GetBytes(payload);
@@ -59,10 +60,4 @@ public class OcrMqResultSink : IOcrResultSink, IDisposable
         _channel?.Close();
         _connection?.Close();
     }
-}
-
-public class OcrCompletedMessage
-{
-    public int id { get; set; }
-    public required string text { get; set; }
 }

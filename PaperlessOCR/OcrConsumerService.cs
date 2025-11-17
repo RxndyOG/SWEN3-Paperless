@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using static System.Net.Mime.MediaTypeNames;
+using Paperless.Contracts;
 
 public interface IRabbitConsumerService
 {
