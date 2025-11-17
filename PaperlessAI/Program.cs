@@ -3,6 +3,7 @@ using PaperlessAI.Abstractions;
 using PaperlessAI.Services;
 using RabbitMQ.Client;
 using System.Runtime.InteropServices;
+using Paperless.Contracts;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -30,22 +31,6 @@ builder.Services.AddHostedService<AiConsumerService>();
 
 var host = builder.Build();
 host.Run();
-
-
-public class RabbitOptions
-{
-    public string Host { get; set; } = "rabbitmq";
-    public string User { get; set; } = "user";
-    public string Pass { get; set; } = "pass";
-    public string InputQueue { get; set; } = QueueNames.OcrFinished;
-    public string OutputQueue { get; set; } = QueueNames.GenAiFinished;
-}
-
-public class QueueNames
-{
-    public const string OcrFinished = "ocr_finished";
-    public const string GenAiFinished = "genai_finished";
-}
 
 public class GenAiOptions
 {

@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { JsonPipe, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 interface Document {
   id: number;
@@ -22,6 +23,7 @@ interface Document {
 export class AppComponent implements OnInit, OnDestroy { // added OnDestroy
    private http = inject(HttpClient);
    private cdr = inject(ChangeDetectorRef);
+  private sanitizer = inject(DomSanitizer);
   result: unknown = {};
   isMenuOpen = false;
   uploadStatus: string = '';
@@ -302,6 +304,13 @@ export class AppComponent implements OnInit, OnDestroy { // added OnDestroy
           this.documents = [...this.documents];
           this.filteredDocuments = [...this.filteredDocuments];
 
+          // Re-apply current search/filter so updated fields (like summary) appear
+          try {
+            this.performSearch();
+          } catch {
+            // ignore if performSearch not available in some test contexts
+          }
+
           // ensure Angular runs change detection immediately
           try { this.cdr.detectChanges(); } catch { /* ignore in SSR/test env */ }
 
@@ -389,6 +398,25 @@ export class AppComponent implements OnInit, OnDestroy { // added OnDestroy
 
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString();
+  }
+
+  /**
+   * Convert markdown-like bold markers **text** into safe HTML with <strong> tags.
+   * Returns sanitized SafeHtml for binding with [innerHTML].
+   */
+  formatMarkdown(text?: string): SafeHtml {
+    if (!text) return '' as unknown as SafeHtml;
+
+    // Escape basic HTML to avoid injection, then replace **bold** markers.
+    const escaped = String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Replace **bold** occurrences with <strong> tags (non-greedy)
+    const html = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   // helper: normalize server payloads (handles PascalCase or different field names)

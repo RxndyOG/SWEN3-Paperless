@@ -4,6 +4,7 @@ using RabbitMQ.Client;
 using System.Text;
 using PaperlessOCR.Abstractions;
 using System.Text.Json;
+using Paperless.Contracts;
 
 public class OcrMqResultSink : IOcrResultSink, IDisposable
 {
@@ -37,21 +38,37 @@ public class OcrMqResultSink : IOcrResultSink, IDisposable
 
     public Task OnOcrCompletedAsync(int documentId, string text, CancellationToken ct)
     {
-        _log.LogInformation("OCR finished: {ocrText}", text);
+        try
+        {
+            _log.LogInformation("OCR finished: {ocrText}", text);
 
-        var message = new OcrCompletedMessage { id = documentId, text = text };
+            var message = new MessageTransferObject { DocumentId = documentId, Text = text };
 
-        var payload = JsonSerializer.Serialize(message);
-        var body = Encoding.UTF8.GetBytes(payload);
+            var payload = JsonSerializer.Serialize(message);
+            var body = Encoding.UTF8.GetBytes(payload);
 
-        _channel.BasicPublish(
-            exchange: "",
-            routingKey: _options.OutputQueue,
-            basicProperties: null,
-            body: body);
+            if(body == null)
+                throw new NullReferenceException("Serialized message body is null");
 
-        _log.LogInformation("Published OCR result for document {documentId}, to {Queue}", documentId, _options.OutputQueue);
-        return Task.CompletedTask;
+            _channel.BasicPublish(
+                exchange: "",
+                routingKey: _options.OutputQueue,
+                basicProperties: null,
+                body: body);
+
+            _log.LogInformation("Published OCR result for document {documentId}, to {Queue}", documentId, _options.OutputQueue);
+            return Task.CompletedTask;
+        }
+        catch (NullReferenceException nex)
+        {
+            _log.LogError(nex, "Null reference encountered while publishing OCR result for document {documentId}", documentId);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _log.LogError(ex, "Failed to publish OCR result for document {documentId}", documentId);
+            throw;
+        }
     }
 
     public void Dispose()
@@ -59,10 +76,4 @@ public class OcrMqResultSink : IOcrResultSink, IDisposable
         _channel?.Close();
         _connection?.Close();
     }
-}
-
-public class OcrCompletedMessage
-{
-    public int id { get; set; }
-    public required string text { get; set; }
 }

@@ -5,7 +5,7 @@ using System.Text;
 public class ContainerOcrEngine : IOcrEngine
 {
     private readonly IContainer _c;
-    private readonly string _workDir; // host temp dir bound to /work
+    private readonly string _workDir;
 
     public ContainerOcrEngine(IContainer container, string hostWorkDir)
     {
@@ -15,7 +15,6 @@ public class ContainerOcrEngine : IOcrEngine
 
     public async Task<string> ExtractAsync(string inputPath, string contentType, CancellationToken ct)
     {
-        // Ensure file is inside the shared workdir
         var hostPath = EnsureInWorkdir(inputPath);
         var fileName = Path.GetFileName(hostPath);
         var baseName = Path.GetFileNameWithoutExtension(hostPath);
@@ -23,10 +22,13 @@ public class ContainerOcrEngine : IOcrEngine
         var outBase = $"/work/{baseName}";
         string pngPath;
 
+        Console.WriteLine($"[OCR] ExtractAsync: input={hostPath}, contentType={contentType}");
+
         if (IsPdf(contentType, hostPath))
         {
-            // pdftoppm -png -r 300 -singlefile -f 1 -l 1 /work/file.pdf /work/file
-            await ExecOrThrow("pdftoppm", $"-png -r 300 -singlefile -f 1 -l 1 \"{inContainerPath}\" \"{outBase}\"");
+            Console.WriteLine("[OCR] Converting PDF to PNG via pdftoppm...");
+            await ExecWithTimeout(new[] { "bash", "-lc", $"pdftoppm -png -r 300 -singlefile -f 1 -l 1 \"{inContainerPath}\" \"{outBase}\"" },
+                                  TimeSpan.FromSeconds(30), "pdftoppm");
             pngPath = $"{outBase}.png";
         }
         else
@@ -34,31 +36,46 @@ public class ContainerOcrEngine : IOcrEngine
             pngPath = inContainerPath;
         }
 
-        // Ensure host-side file is present in the bound workdir (avoid fragile container-side 'test -f' exec)
+        Console.WriteLine($"[OCR] Using PNG path: {pngPath}");
+
+        // sanity check host file present
         if (!File.Exists(hostPath))
             throw new InvalidOperationException($"host file not found: {hostPath}");
 
-        // tesseract /work/file.png stdout
-        var execResult = await _c.ExecAsync(new[] { "bash", "-lc", $"tesseract \"{pngPath}\" stdout" });
+        Console.WriteLine("[OCR] Running tesseract...");
+
+        var execResult = await ExecWithTimeout(
+            new[] { "bash", "-lc", $"tesseract \"{pngPath}\" stdout" },
+            TimeSpan.FromSeconds(60),
+            "tesseract");
+
         var code = execResult.ExitCode;
         var outText = execResult.Stdout;
         var err = execResult.Stderr;
 
-        // Detect common docker exec runtime failure message and give actionable guidance
         var combined = $"{outText}{err}";
         if (combined.Contains("OCI runtime exec failed", StringComparison.OrdinalIgnoreCase)
          || combined.Contains("unable to create new parent process", StringComparison.OrdinalIgnoreCase)
          || combined.Contains("namespace path", StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                $"docker exec failed while running tesseract. This is usually a Docker/host issue (Docker engine stopped, WSL/VM issues, or bind-mount access). Raw output: '{combined}'. " +
-                "Ensure Docker is running, the test host path is shared with Docker (on Windows/WSL), and restart Docker if necessary.");
+                $"docker exec failed while running tesseract. Raw output: '{combined}'.");
         }
 
         if (code != 0)
             throw new InvalidOperationException($"tesseract failed (exit {code}). Stdout: '{outText}' Stderr: '{err}'");
 
+        Console.WriteLine("[OCR] tesseract finished OK.");
         return outText ?? string.Empty;
+    }
+
+    private async Task<ExecResult> ExecWithTimeout(string[] cmd, TimeSpan timeout, string tool)
+    {
+        using var cts = new CancellationTokenSource(timeout);
+        var result = await _c.ExecAsync(cmd, cts.Token);
+        if (cts.IsCancellationRequested)
+            throw new TimeoutException($"{tool} inside container timed out after {timeout.TotalSeconds} seconds.");
+        return result;
     }
 
     static bool IsPdf(string contentType, string path)

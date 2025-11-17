@@ -27,8 +27,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PaperlessOCR\PaperlessOCR.csproj" />
-    <ProjectReference Include="..\PaperlessREST\PaperlessREST.csproj" />
+    <ProjectReference Include="..\Paperless.Contracts\Paperless.Contracts.csproj" />
+    <ProjectReference Include="..\PaperlessAI\Paperless.AI.csproj" />
+    <ProjectReference Include="..\PaperlessOCR\Paperless.OCR.csproj" />
+    <ProjectReference Include="..\PaperlessREST\Paperless.REST.csproj" />
   </ItemGroup>
 
   <ItemGroup>

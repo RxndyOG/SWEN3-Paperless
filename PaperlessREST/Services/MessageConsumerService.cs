@@ -1,11 +1,12 @@
-﻿using System.Text;
-using System.Text.Json;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Paperless.Contracts;
+using PaperlessREST.Data;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using PaperlessREST.Data;
+using System.Text;
+using System.Text.Json;
 
 namespace PaperlessREST.Services;
 
@@ -68,7 +69,7 @@ public class MessageConsumerService : BackgroundService
             var json = Encoding.UTF8.GetString(ea.Body.ToArray());
             _logger.LogInformation("REST received summary: {json}", json);
 
-            var msg = JsonSerializer.Deserialize<SummarizedText>(json);
+            var msg = JsonSerializer.Deserialize<MessageTransferObject>(json);
 
             if (msg != null)
             {
@@ -82,18 +83,18 @@ public class MessageConsumerService : BackgroundService
                 }
                 else
                 {
-                    doc.SummarizedContent = msg.Summary;
+                    doc.SummarizedContent = msg.Text;
                     await db.SaveChangesAsync();
                     _logger.LogInformation("Updated summary for document {Id}", msg.DocumentId);
                 }
             }
 
-            _channel.BasicAck(ea.DeliveryTag, false);
+            _channel?.BasicAck(ea.DeliveryTag, false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to process GenAI summary");
-            _channel.BasicNack(ea.DeliveryTag, false, requeue: true);
+            _channel?.BasicNack(ea.DeliveryTag, false, requeue: true);
         }
     }
 
@@ -103,10 +104,4 @@ public class MessageConsumerService : BackgroundService
         _conn?.Close();
         base.Dispose();
     }
-}
-
-public class SummarizedText
-{
-    public string Summary { get; set; } = "";
-    public int DocumentId { get; set; }
 }
