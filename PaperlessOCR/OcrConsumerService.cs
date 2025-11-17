@@ -168,26 +168,6 @@ public class OcrConsumerService : BackgroundService, IRabbitConsumerService
         return output;
     }
 
-    /*
-    private static void TryDelete(string path)
-    {
-        try { if (File.Exists(path)) File.Delete(path); } catch { }
-    }
-
-    private static void RunOrThrow(string fileName, string args)
-    {
-        var psi = new ProcessStartInfo(fileName, args)
-        {
-            RedirectStandardError = true,
-            RedirectStandardOutput = true
-        };
-        using var p = Process.Start(psi)!;
-        p.WaitForExit();
-        if (p.ExitCode != 0)
-            throw new InvalidOperationException($"{fileName} failed: {p.StandardError.ReadToEnd()}");
-    }
-    */
-
     public async Task ProcessAsync(UploadedDocMessage payload, CancellationToken ct)
     {
         var path = await _fetcher.FetchToTempFileAsync(payload.Bucket, payload.ObjectKey, payload.FileName, ct);

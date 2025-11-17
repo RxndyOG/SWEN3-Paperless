@@ -32,16 +32,6 @@ builder.Services.AddHostedService<AiConsumerService>();
 var host = builder.Build();
 host.Run();
 
-
-/*public class RabbitOptions
-{
-    public string Host { get; set; } = "rabbitmq";
-    public string User { get; set; } = "user";
-    public string Pass { get; set; } = "pass";
-    public string InputQueue { get; set; } = QueueNames.OcrFinished;
-    public string OutputQueue { get; set; } = QueueNames.GenAiFinished;
-}*/
-
 public class GenAiOptions
 {
     public string ApiKey { get; set; } = "dummy";

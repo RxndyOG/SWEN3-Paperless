@@ -73,11 +73,13 @@ public class MessageQueueService : IMessageQueueService, IDisposable
                                   basicProperties: null,
                                   body: body);
 
-            _logger.LogInformation($"Message published to {queueName}: {message}");
+            if (_logger != null)
+                _logger.LogInformation($"Message published to {queueName}: {message}");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to publish message: {message}");
+            if (_logger != null)
+                _logger.LogError(ex, $"Failed to publish message: {message}");
             throw;
         }
     }
@@ -89,11 +91,13 @@ public class MessageQueueService : IMessageQueueService, IDisposable
         {
             _channel?.Close();
             _connection?.Close();
-            _logger.LogInformation("RabbitMQ connection and channel closed.");
+            if (_logger != null)
+                _logger.LogInformation("RabbitMQ connection and channel closed.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during RabbitMQ resource cleanup.");
+            if (_logger != null)
+                _logger.LogError(ex, "Error during RabbitMQ resource cleanup.");
         }
         _disposed = true;
     }

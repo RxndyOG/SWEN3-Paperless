@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace PaperlessAI
 {
-    internal class AiConsumerService : BackgroundService
+    public class AiConsumerService : BackgroundService
     {
         private readonly ILogger<AiConsumerService> _logger;
         private readonly RabbitOptions _opts;
@@ -90,7 +90,7 @@ namespace PaperlessAI
                 {
                     var message = Encoding.UTF8.GetString(ea.Body.ToArray());
                     _logger.LogInformation("Raw message from ocr_finished: {json}", message);
-                    var payload = JsonSerializer.Deserialize<OcrCompletedMessage>(message)!;
+                    var payload = JsonSerializer.Deserialize<MessageTransferObject>(message)!;
                     await ProcessAsync(payload, ct);
 
                     _channel.BasicAck(ea.DeliveryTag, multiple: false);
@@ -126,7 +126,7 @@ namespace PaperlessAI
             return Task.CompletedTask;
         }
 
-        public async Task ProcessAsync(OcrCompletedMessage message, CancellationToken ct)
+        public async Task ProcessAsync(MessageTransferObject message, CancellationToken ct)
         {
             _logger.LogInformation("Received text from OCR: ID = {id}\n {text}", message.DocumentId, message.Text);
             var summary = await _genEngine.SummarizeAsync(message.Text, ct);

@@ -10,8 +10,6 @@ using PaperlessREST.Models;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Diagnostics;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.Fonts;
@@ -66,7 +64,6 @@ public class OcrTests : IClassFixture<OcrFixture>
     public OcrTests(OcrFixture fx) => _fx = fx;
 
     [Fact]
-    [assembly: CollectionBehavior(DisableTestParallelization = true)]
     public async Task CliOcr_Extracts_Text_From_Png_InContainer()
     {
         // Create PNG in the host workdir (shared with container)
@@ -88,7 +85,6 @@ public class OcrTests : IClassFixture<OcrFixture>
     }
 
     [Fact]
-    [assembly: CollectionBehavior(DisableTestParallelization = true)]
     public async Task Worker_ProcessAsync_On_Png_Emits_Text_InContainer()
     {
         // 1) Prepare PNG

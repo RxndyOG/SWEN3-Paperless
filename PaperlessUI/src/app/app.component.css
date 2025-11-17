@@ -146,8 +146,12 @@ body {
 }
 
 /* Adjust main content when status is shown */
-/* Adjust main content when status is shown */
-/* (styles defined later) */
+.main-content {
+  margin-top: 60px;
+  padding: 20px;
+  transition: margin-left 0.3s ease, margin-top 0.3s ease;
+  min-height: calc(100vh - 60px);
+}
 
 /* Drop Zone */
 .drop-zone {
@@ -366,46 +370,6 @@ body {
   max-height: 300px;
   overflow-y: auto;
 }
-
-/* Summary loading / animation helpers */
-.doc-summary {
-  margin-top: 12px;
-  border-top: 1px solid rgba(0,0,0,0.06);
-  padding-top: 10px;
-}
-
-.summary-text {
-  color: #222;
-  line-height: 1.4;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 350ms ease, transform 350ms ease;
-}
-
-.summary-text.fade-in {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.summary-pending {
-  color: #666;
-  font-style: italic;
-  display: inline-block;
-  opacity: 0.95;
-}
-
-/* subtle pulsing to indicate work in progress */
-.loading-pulse {
-  animation: pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0% { opacity: 0.6; transform: translateY(0); }
-  50% { opacity: 1; transform: translateY(-2px); }
-  100% { opacity: 0.6; transform: translateY(0); }
-}
-
-/* ensure the summary text fades in after it's present */
 
 /* Responsive Design */
 @media (max-width: 768px) {

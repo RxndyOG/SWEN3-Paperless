@@ -69,7 +69,7 @@ public class MessageConsumerService : BackgroundService
             var json = Encoding.UTF8.GetString(ea.Body.ToArray());
             _logger.LogInformation("REST received summary: {json}", json);
 
-            var msg = JsonSerializer.Deserialize<GenAiSummaryMessage>(json);
+            var msg = JsonSerializer.Deserialize<MessageTransferObject>(json);
 
             if (msg != null)
             {
@@ -83,7 +83,7 @@ public class MessageConsumerService : BackgroundService
                 }
                 else
                 {
-                    doc.SummarizedContent = msg.Summary;
+                    doc.SummarizedContent = msg.Text;
                     await db.SaveChangesAsync();
                     _logger.LogInformation("Updated summary for document {Id}", msg.DocumentId);
                 }

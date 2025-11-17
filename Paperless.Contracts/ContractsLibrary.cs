@@ -1,15 +1,9 @@
 ﻿namespace Paperless.Contracts
 {
-    public class OcrCompletedMessage
+    public class MessageTransferObject
     {
         public int DocumentId { get; set; }
         public required string Text { get; set; } = "";
-    }
-
-    public class GenAiSummaryMessage
-    {
-        public int DocumentId { get; set; }
-        public required string Summary { get; set; } = "";
     }
 
     public record UploadedDocMessage(

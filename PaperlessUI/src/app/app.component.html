@@ -12,10 +12,6 @@
       <span class="loading-spinner" *ngIf="isUploading"></span>
       {{ isUploading ? 'Uploading...' : 'Add Document' }}
     </button>
-    <!-- Spoof add document for testing -->
-    <button class="add-fake-btn" (click)="addFakeDocument()" title="Add fake document for testing">
-      ➕ Fake
-    </button>
     
     <!-- Hidden file input -->
     <input type="file" 
@@ -176,7 +172,7 @@
           <div class="doc-summary" *ngIf="doc">
             <div *ngIf="doc.summary; else summaryPending" class="summary-text fade-in">
               <strong>Summary:</strong>
-              <div [innerText]="doc.summary"></div>
+              <div [innerHTML]="formatMarkdown(doc.summary)"></div>
             </div>
             <ng-template #summaryPending>
               <div class="summary-pending loading-pulse" *ngIf="!doc.summary">
