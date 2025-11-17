@@ -82,3 +82,7 @@ _ReSharper*/
 TestResult*/
 /secrets.env
 /PaperlessREST/appsettings.Development.json
+/.vs/Paperless/v17/DocumentLayout.backup.json
+/.vs/Paperless/v17/DocumentLayout.json
+/.vs/Paperless/v17/.suo
+/.vs/slnx.sqlite
