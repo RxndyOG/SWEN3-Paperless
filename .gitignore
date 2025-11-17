@@ -86,3 +86,10 @@ TestResult*/
 /.vs/Paperless/v17/DocumentLayout.json
 /.vs/Paperless/v17/.suo
 /.vs/slnx.sqlite
+/PaperlessREST/obj/PaperlessREST.csproj.nuget.dgspec.json
+/PaperlessREST/obj/PaperlessREST.csproj.nuget.g.props
+/PaperlessREST/obj/project.assets.json
+/PaperlessREST/obj/project.nuget.cache
+/Paperless.sln
+/.vs/Paperless/DesignTimeBuild/.dtbcache.v2
+/.vs/Paperless/v17/.futdcache.v2
