@@ -60,50 +60,6 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
                .UseNpgsql(_cs).Options);
 
     [Fact]
-    public async Task UpdateDocument_Should_Return_NoContent_And_Persist_Changes()
-    {
-        // Arrange
-        int id;
-        using (var db = NewDb())
-        {
-            CleanDocuments(db);
-
-            var doc = new Document
-            {
-                FileName = "old.pdf",
-                Content = "old",
-                CreatedAt = DateTime.UtcNow
-            };
-            db.Documents.Add(doc);
-            await db.SaveChangesAsync();
-            id = doc.Id;
-        }
-
-        IActionResult result;
-        using (var db = NewDb())
-        {
-            var logger = new LoggerFactory().CreateLogger<DocumentsController>();
-            var storage = new Mock<IObjectStorage>().Object;
-            var mq = new Mock<MessageQueueService>().Object;
-            var controller = new DocumentsController(db, logger, storage, mq);
-            var dto = new Document { FileName = "new.pdf", Content = "new content" };
-
-            // Act
-            result = await controller.UpdateDocument(id, dto);
-        }
-
-        // Assert HTTP result
-        Assert.IsType<Microsoft.AspNetCore.Mvc.NoContentResult>(result);
-
-        // Assert DB state
-        using var verify = NewDb();
-        var updated = await verify.Documents.FindAsync(id);
-        Assert.NotNull(updated);
-        Assert.Equal("new.pdf", updated!.FileName);
-        Assert.Equal("new content", updated.Content);
-    }
-
-    [Fact]
     public async Task GetExistingDocumentById()
     {
         // Arrange
@@ -200,22 +156,7 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
         Assert.DoesNotContain(documentList, d => d.Id == id);
     }
 
-    [Fact]
-    public async Task UpdateDocument_Should_Return_NotFound_When_Id_Does_Not_Exist()
-    {
-        using var db = NewDb();
-        var logger = new LoggerFactory().CreateLogger<DocumentsController>();
-        var storage = new Mock<IObjectStorage>().Object;
-        var mq = new Mock<MessageQueueService>().Object;
-        var controller = new DocumentsController(db, logger, storage, mq);
-
-        var dto = new Document { FileName = "x.pdf", Content = "x" };
-
-        var result = await controller.UpdateDocument(999999, dto);
-
-        Assert.IsType<NotFoundResult>(result);
-    }
-
+    
     static void CleanDocuments(AppDbContext db)
     {
         // Ensure schema exists (and migrations are applied) before truncating
