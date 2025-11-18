@@ -10,17 +10,17 @@ using System.Text.Json;
 
 namespace PaperlessREST.Services;
 
-public class MessageConsumerService : BackgroundService
+public class RestConsumerService : BackgroundService
 {
-    private readonly ILogger<MessageConsumerService> _logger;
+    private readonly ILogger<RestConsumerService> _logger;
     private readonly IServiceProvider _services;
     private readonly IConfiguration _config;
 
     private IConnection? _conn;
     private IModel? _channel;
 
-    public MessageConsumerService(
-        ILogger<MessageConsumerService> logger,
+    public RestConsumerService(
+        ILogger<RestConsumerService> logger,
         IServiceProvider services,
         IConfiguration config)
     {
@@ -84,6 +84,7 @@ public class MessageConsumerService : BackgroundService
                 else
                 {
                     doc.SummarizedContent = msg.Text;
+                    doc.Tag = msg.Tag;
                     await db.SaveChangesAsync();
                     _logger.LogInformation("Updated summary for document {Id}", msg.DocumentId);
                 }

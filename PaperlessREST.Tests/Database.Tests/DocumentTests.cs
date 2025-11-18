@@ -92,7 +92,7 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
                 .Setup(s => s.GetPresignedGetUrl(It.IsAny<string>(), It.IsAny<TimeSpan>()))
                 .Throws(new Exception("presign fail"));
 
-            var mqMock = new Mock<MessageQueueService>();
+            var mqMock = new Mock<RestQueueService>();
 
             var controller = new DocumentsController(db, logger, storageMock.Object, mqMock.Object);
 
@@ -136,7 +136,7 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
         {
             var logger = new LoggerFactory().CreateLogger<DocumentsController>();
             var storage = new Mock<IObjectStorage>().Object;
-            var mq = new Mock<MessageQueueService>().Object;
+            var mq = new Mock<RestQueueService>().Object;
             var controller = new DocumentsController(db, logger, storage, mq);
 
             // Call DELETE

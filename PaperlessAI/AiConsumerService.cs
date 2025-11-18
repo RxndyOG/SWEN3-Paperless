@@ -131,7 +131,8 @@ namespace PaperlessAI
             _logger.LogInformation("Received text from OCR: ID = {id}\n {text}", message.DocumentId, message.Text);
             var summary = await _genEngine.SummarizeAsync(message.Text, ct);
             _logger.LogInformation("Response from Gemini: {response}", summary);
-            await _genResultSink.OnGeminiCompletedAsync(message.DocumentId, summary, ct);
+            var tag = await _genEngine.ClassifyAsync(message.Text, ct);
+            await _genResultSink.OnGeminiCompletedAsync(message.DocumentId, summary, tag, ct);
         }
     }
 }

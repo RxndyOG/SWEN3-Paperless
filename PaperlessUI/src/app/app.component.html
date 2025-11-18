@@ -166,6 +166,11 @@
             <button class="action-btn delete" (click)="deleteDocument(doc)" title="Delete">
               🗑️
             </button>
+
+            <!-- Tag badge shown next to action buttons -->
+            <div class="tag-badge" *ngIf="doc.tagName" [ngClass]="doc.tagClass" title="Document tag">
+              {{ doc.tagName }}
+            </div>
           </div>
 
           <!-- Document Summary -->

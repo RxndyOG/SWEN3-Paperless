@@ -1,9 +1,10 @@
+using Microsoft.Extensions.Options;
+using Paperless.Contracts;
 using PaperlessAI;
 using PaperlessAI.Abstractions;
 using PaperlessAI.Services;
 using RabbitMQ.Client;
 using System.Runtime.InteropServices;
-using Paperless.Contracts;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -23,6 +24,21 @@ builder.Services.Configure<GenAiOptions>(opts =>
 {
     var cfg = builder.Configuration;
     opts.ApiKey = cfg["GEMINI_API_KEY"] ?? "dummy";
+});
+
+builder.Services.AddSingleton<IConnection>(sp =>
+{
+    var opts = sp.GetRequiredService<IOptions<RabbitOptions>>().Value;
+
+    var factory = new ConnectionFactory
+    {
+        HostName = opts.Host,
+        UserName = opts.User,
+        Password = opts.Pass,
+        DispatchConsumersAsync = true
+    };
+
+    return factory.CreateConnection();
 });
 
 builder.Services.AddSingleton<IGenAiEngine, GenAiEngine>();

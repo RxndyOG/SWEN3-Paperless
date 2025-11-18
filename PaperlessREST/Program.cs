@@ -4,11 +4,16 @@ using PaperlessREST.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB
+});
+
 // PostgreSQL Connection
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddSingleton<MessageQueueService>();
+builder.Services.AddSingleton<RestQueueService>();
 
 builder.Services.AddSingleton<IObjectStorage>(sp =>
 {
@@ -18,7 +23,7 @@ builder.Services.AddSingleton<IObjectStorage>(sp =>
     return storage;
 });
 
-builder.Services.AddHostedService<MessageConsumerService>();
+builder.Services.AddHostedService<RestConsumerService>();
 
 
 builder.Services.AddControllers();

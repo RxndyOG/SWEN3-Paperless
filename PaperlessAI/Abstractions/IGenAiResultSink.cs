@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Paperless.Contracts;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,6 @@ namespace PaperlessAI.Abstractions
 {
     public interface IGenAiResultSink
     {
-        Task OnGeminiCompletedAsync(int documentId, string summarizedText, CancellationToken ct);
+        Task OnGeminiCompletedAsync(int documentId, string summarizedText, DocumentTag tag, CancellationToken ct);
     }
 }

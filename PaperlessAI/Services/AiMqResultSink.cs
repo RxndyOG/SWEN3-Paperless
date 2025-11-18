@@ -1,15 +1,16 @@
 ﻿using GenerativeAI.Types;
 using Microsoft.Extensions.Options;
+using Paperless.Contracts;
 using PaperlessAI.Abstractions;
 using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using System.Text.Json;
-using Paperless.Contracts;
 
 namespace PaperlessAI.Services
 {
@@ -18,14 +19,16 @@ namespace PaperlessAI.Services
         private readonly ILogger<AiMqResultSink> _log;
         private readonly IModel _channel;
         private readonly RabbitOptions _options;
+        private readonly IConnection _connection;
 
         public AiMqResultSink(
             ILogger<AiMqResultSink> log,
             IOptions<RabbitOptions> options,
-            IConnection connection) // inject connection
+            IConnection connection)
         {
             _log = log;
             _options = options.Value;
+            _connection = connection;
 
             _channel = connection.CreateModel();
             _channel.QueueDeclare(
@@ -36,11 +39,11 @@ namespace PaperlessAI.Services
                 arguments: null);
         }
 
-        public Task OnGeminiCompletedAsync(int documentId, string text, CancellationToken ct)
+        public Task OnGeminiCompletedAsync(int documentId, string text, DocumentTag tag, CancellationToken ct)
         {
             try
             {
-                var message = new MessageTransferObject { DocumentId = documentId, Text = text };
+                var message = new MessageTransferObject { DocumentId = documentId, Text = text , Tag = tag};
                 var payload = JsonSerializer.Serialize<MessageTransferObject>(message);
                 var body = Encoding.UTF8.GetBytes(payload);
 
@@ -87,6 +90,7 @@ namespace PaperlessAI.Services
         public void Dispose()
         {
             _channel?.Close();
+            _connection?.Close();
         }
     }
 }
