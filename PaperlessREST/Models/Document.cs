@@ -1,4 +1,6 @@
-﻿namespace PaperlessREST.Models;
+﻿using Paperless.Contracts;
+
+namespace PaperlessREST.Models;
 
 public class Document
 {
@@ -10,5 +12,6 @@ public class Document
     public string ContentType { get; set; } = "application/pdf";
     public long SizeBytes { get; set; }
     public string SummarizedContent { get; set; } = string.Empty;
+    public DocumentTag Tag { get; set; }
 }
 

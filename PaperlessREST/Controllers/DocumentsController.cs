@@ -27,13 +27,13 @@ public class DocumentsController : ControllerBase, IDocumentsController
     private readonly AppDbContext _db;
     private readonly ILogger<DocumentsController> _logger;
     private readonly IObjectStorage _storage;
-    private readonly MessageQueueService _mq;
+    private readonly RestQueueService _mq;
 
     public DocumentsController(
         AppDbContext db,
         ILogger<DocumentsController> logger,
         IObjectStorage storage,
-        MessageQueueService mq)
+        RestQueueService mq)
     {
         _db = db;
         _logger = logger;
@@ -58,6 +58,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
 
     //Accept only PDF files (enforced). Stores the file in MinIO and metadata in DB.
     [HttpPost]
+    [RequestSizeLimit(10 * 1024 * 1024)]
     public async Task<IActionResult> Upload([FromForm] IFormFile file)
     {
         if (file is null)

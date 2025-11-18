@@ -11,6 +11,9 @@ interface Document {
   content: string;
   createdAt: string;
   summary?: string; // added optional summary
+  tag?: number;
+  tagName?: string;
+  tagClass?: string;
 }
 
 @Component({
@@ -20,9 +23,9 @@ interface Document {
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
-export class AppComponent implements OnInit, OnDestroy { // added OnDestroy
-   private http = inject(HttpClient);
-   private cdr = inject(ChangeDetectorRef);
+export class AppComponent implements OnInit, OnDestroy {
+  private http = inject(HttpClient);
+  private cdr = inject(ChangeDetectorRef);
   private sanitizer = inject(DomSanitizer);
   result: unknown = {};
   isMenuOpen = false;
@@ -30,7 +33,7 @@ export class AppComponent implements OnInit, OnDestroy { // added OnDestroy
   isUploading = false;
   selectedFileName = '';
   isDragOver = false;
-  
+
   // Document management properties
   documents: Document[] = [];
   filteredDocuments: Document[] = [];
@@ -42,6 +45,9 @@ export class AppComponent implements OnInit, OnDestroy { // added OnDestroy
   private summaryPollers: Record<number, number> = {}; // docId -> intervalId
   private readonly pollIntervalMs = 3000;
   private readonly maxPollAttempts = 30; // ~90s max
+
+  // Increase max upload size to 10 MB
+  private readonly maxUploadBytes = 10 * 1024 * 1024; // 10 MB
 
   ngOnInit(): void {
     this.result = {};
@@ -117,21 +123,15 @@ export class AppComponent implements OnInit, OnDestroy { // added OnDestroy
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      
-      // Check if file is PDF
-      if (file.type !== 'application/pdf') {
-        this.uploadStatus = 'Please select a PDF file only.';
+
+      if (file.size > this.maxUploadBytes) {
+        this.uploadStatus = 'File too large. Maximum allowed size is 10 MB.';
+        // clear input so user can pick another file
+        input.value = '';
+        setTimeout(() => (this.uploadStatus = ''), 5000);
         return;
       }
 
-      // Check file size (max 10MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      if (file.size > maxSize) {
-        this.uploadStatus = 'File size must be less than 10MB.';
-        return;
-      }
-
-      this.selectedFileName = file.name;
       this.uploadFile(file);
     }
   }
@@ -221,21 +221,13 @@ export class AppComponent implements OnInit, OnDestroy { // added OnDestroy
     const files = event.dataTransfer?.files;
     if (files && files.length > 0) {
       const file = files[0];
-      
-      // Check if file is PDF
-      if (file.type !== 'application/pdf') {
-        this.uploadStatus = 'Please select a PDF file only.';
+
+      if (file.size > this.maxUploadBytes) {
+        this.uploadStatus = 'File too large. Maximum allowed size is 10 MB.';
+        setTimeout(() => (this.uploadStatus = ''), 5000);
         return;
       }
 
-      // Check file size (max 10MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      if (file.size > maxSize) {
-        this.uploadStatus = 'File size must be less than 10MB.';
-        return;
-      }
-
-      this.selectedFileName = file.name;
       this.uploadFile(file);
     }
   }
@@ -421,24 +413,43 @@ export class AppComponent implements OnInit, OnDestroy { // added OnDestroy
 
   // helper: normalize server payloads (handles PascalCase or different field names)
   private normalizeDocument(serverDoc: any): Document {
-    if (!serverDoc) return serverDoc;
-    const id = serverDoc.id ?? serverDoc.Id ?? serverDoc.documentId ?? serverDoc.DocumentId ?? serverDoc.DocumentId;
-    const fileName = serverDoc.fileName ?? serverDoc.FileName ?? serverDoc.file_name ?? serverDoc.Name;
-    const content = serverDoc.content ?? serverDoc.Content ?? serverDoc.ContentText ?? serverDoc.FullText;
-    const createdAt = serverDoc.createdAt ?? serverDoc.CreatedAt ?? serverDoc.created_at ?? new Date().toISOString();
-    const summary =
-      serverDoc.summary ??
-      serverDoc.Summary ??
-      serverDoc.summarizedContent ??
-      serverDoc.SummarizedContent ??
-      serverDoc.SummarizedContentText;
-
-    return {
-      id: Number(id),
-      fileName: fileName ?? `Document_${id}`,
-      content: content ?? '',
-      createdAt: createdAt,
-      summary: summary ?? undefined
-    } as Document;
-   }
+     if (!serverDoc) return serverDoc;
+     const id = serverDoc.id ?? serverDoc.Id ?? serverDoc.documentId ?? serverDoc.DocumentId ?? serverDoc.DocumentId;
+     const fileName = serverDoc.fileName ?? serverDoc.FileName ?? serverDoc.file_name ?? serverDoc.Name;
+     const content = serverDoc.content ?? serverDoc.Content ?? serverDoc.ContentText ?? serverDoc.FullText;
+     const createdAt = serverDoc.createdAt ?? serverDoc.CreatedAt ?? serverDoc.created_at ?? new Date().toISOString();
+     const summary =
+       serverDoc.summary ??
+       serverDoc.Summary ??
+       serverDoc.summarizedContent ??
+       serverDoc.SummarizedContent ??
+       serverDoc.SummarizedContentText;
+    
+    // Tag mapping (server returns numeric tag, e.g. "tag": 4)
+    const rawTag = serverDoc.tag ?? serverDoc.Tag ?? serverDoc.TagId ?? 0;
+    const tagNum = Number(rawTag) || 0;
+    const tagMap: Record<number, { name: string; cls: string }> = {
+      0: { name: 'Default', cls: 'tag-default' },
+      1: { name: 'Invoice', cls: 'tag-invoice' },
+      2: { name: 'Contract', cls: 'tag-contract' },
+      3: { name: 'Personal', cls: 'tag-personal' },
+      4: { name: 'Education', cls: 'tag-education' },
+      5: { name: 'Medical', cls: 'tag-medical' },
+      6: { name: 'Finance', cls: 'tag-finance' },
+      7: { name: 'Legal', cls: 'tag-legal' },
+      8: { name: 'Other', cls: 'tag-other' },
+    };
+    const tagInfo = tagMap[tagNum] ?? tagMap[0];
+ 
+     return {
+       id: Number(id),
+       fileName: fileName ?? `Document_${id}`,
+       content: content ?? '',
+       createdAt: createdAt,
+       summary: summary ?? undefined,
+       tag: tagNum,
+       tagName: tagInfo.name,
+       tagClass: tagInfo.cls
+     } as Document;
+    }
  }

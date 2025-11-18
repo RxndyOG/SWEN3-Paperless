@@ -10,16 +10,16 @@ public interface IMessageQueueService
     void PublishTo(string message, string queueName);
 }
 
-public class MessageQueueService : IMessageQueueService, IDisposable
+public class RestQueueService : IMessageQueueService, IDisposable
 {
     private readonly IConnection? _connection;
     private readonly IModel? _channel;
-    private readonly ILogger<MessageQueueService>? _logger;
+    private readonly ILogger<RestQueueService>? _logger;
     private bool _disposed;
 
 
-    public MessageQueueService() { }
-    public MessageQueueService(IConfiguration config, ILogger<MessageQueueService> logger)
+    public RestQueueService() { }
+    public RestQueueService(IConfiguration config, ILogger<RestQueueService> logger)
     {
         _logger = logger;
         try

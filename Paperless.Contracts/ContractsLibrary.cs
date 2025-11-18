@@ -1,10 +1,26 @@
-﻿namespace Paperless.Contracts
+﻿using System.Formats.Asn1;
+
+namespace Paperless.Contracts
 {
     public class MessageTransferObject
     {
         public int DocumentId { get; set; }
-        public required string Text { get; set; } = "";
+        public required string Text { get; set; }
+        public required DocumentTag Tag { get; set; } = 0;
     }
+
+    public enum DocumentTag
+{
+    Default = 0,
+    Invoice = 1,
+    Contract = 2,
+    Personal = 3,
+    Education = 4,
+    Medical = 5,
+    Finance = 6,
+    Legal = 7,
+    Other = 8
+}
 
     public record UploadedDocMessage(
     int DocumentId,
