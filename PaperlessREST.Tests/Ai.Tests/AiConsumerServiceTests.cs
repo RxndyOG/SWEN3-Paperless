@@ -60,7 +60,7 @@ public class AiConsumerServiceTests
         var message = new MessageTransferObject
         {
             DocumentId = 42,
-            Text = inputText,
+            OcrText = inputText,
             Tag = DocumentTag.Default // incoming tag is ignored/overwritten by classification
         };
 
@@ -98,7 +98,7 @@ public class AiConsumerServiceTests
         var message = new MessageTransferObject
         {
             DocumentId = 99,
-            Text = "Something",
+            OcrText = "Something",
             Tag = DocumentTag.Default
         };
 
@@ -138,7 +138,7 @@ public class AiConsumerServiceTests
         var message = new MessageTransferObject
         {
             DocumentId = 7,
-            Text = inputText,
+            OcrText = inputText,
             Tag = DocumentTag.Default
         };
 

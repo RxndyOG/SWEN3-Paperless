@@ -45,6 +45,8 @@ export class AppComponent implements OnInit, OnDestroy {
   private summaryPollers: Record<number, number> = {}; // docId -> intervalId
   private readonly pollIntervalMs = 3000;
   private readonly maxPollAttempts = 30; // ~90s max
+  // Debounce timer for search input
+  private searchDebounceTimer?: number;
 
   // Increase max upload size to 10 MB
   private readonly maxUploadBytes = 10 * 1024 * 1024; // 10 MB
@@ -60,6 +62,11 @@ export class AppComponent implements OnInit, OnDestroy {
       clearInterval(id);
     }
     this.summaryPollers = {};
+    // clear search debounce timer if present
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+      this.searchDebounceTimer = undefined;
+    }
   }
 
   testApi(): void {
@@ -193,7 +200,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
   searchDocuments(): void {
     this.currentView = 'documents';
-    this.performSearch();
+    const q = this.searchQuery?.trim();
+    if (!q) {
+      this.showAllDocuments();
+      return;
+    }
+    this.performRemoteSearch(q);
   }
 
   viewSettings(): void {
@@ -330,7 +342,21 @@ export class AppComponent implements OnInit, OnDestroy {
   onSearchInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchQuery = input.value;
-    this.performSearch();
+
+    // debounce remote search: wait 500ms after the user's last keystroke
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
+
+    this.searchDebounceTimer = window.setTimeout(() => {
+      const q = this.searchQuery?.trim();
+      if (!q) {
+        this.showAllDocuments();
+        return;
+      }
+      this.performRemoteSearch(q);
+      this.searchDebounceTimer = undefined;
+    }, 500);
   }
 
   performSearch(): void {
@@ -338,12 +364,76 @@ export class AppComponent implements OnInit, OnDestroy {
       this.filteredDocuments = [...this.documents];
       return;
     }
-
+    // keep local fallback behaviour when explicitly invoked
     const query = this.searchQuery.toLowerCase();
     this.filteredDocuments = this.documents.filter(doc => 
       doc.fileName.toLowerCase().includes(query) ||
       (doc.content && doc.content.toLowerCase().includes(query))
     );
+  }
+
+  /**
+   * Call the server-side search endpoint and restrict displayed documents
+   * to the ids returned by the backend. The server returns objects like
+   * [{ documentId: 11, summary: "..." }, ...]
+   */
+  performRemoteSearch(query: string): void {
+    this.isLoadingDocuments = true;
+    const url = `/api/documents/search?query=${encodeURIComponent(query)}`;
+    this.http.get<Array<{ documentId: number; summary?: string }>>(url).subscribe({
+      next: (results) => {
+        const ids = (results || []).map(r => Number(r.documentId)).filter(Boolean);
+
+        // merge summaries into existing documents (if present)
+        for (const r of results || []) {
+          const id = Number(r.documentId);
+          const existing = this.documents.find(d => d.id === id);
+          if (existing) {
+            existing.summary = r.summary ?? existing.summary;
+          }
+        }
+
+        // find ids that we don't have locally and fetch them
+        const missing = ids.filter(id => !this.documents.some(d => d.id === id));
+        if (missing.length === 0) {
+          // simply filter local docs
+          this.filteredDocuments = this.documents.filter(d => ids.includes(d.id));
+          this.isLoadingDocuments = false;
+          return;
+        }
+
+        // fetch missing documents in parallel
+        const fetches = missing.map(id => this.http.get<any>(`/api/documents/${id}`).toPromise());
+        Promise.all(fetches).then(fetched => {
+          for (const raw of fetched) {
+            const norm = this.normalizeDocument(raw);
+            // attach summary from search results if present
+            const searchHit = (results || []).find(r => Number(r.documentId) === norm.id);
+            if (searchHit && searchHit.summary) norm.summary = searchHit.summary;
+            // add to lists
+            this.documents.push(norm);
+          }
+
+          // now filter
+          this.filteredDocuments = this.documents.filter(d => ids.includes(d.id));
+          // ensure arrays are replaced so bindings update
+          this.documents = [...this.documents];
+          this.filteredDocuments = [...this.filteredDocuments];
+          this.isLoadingDocuments = false;
+        }).catch(err => {
+          console.error('Error fetching missing documents:', err);
+          // still show what we can
+          this.filteredDocuments = this.documents.filter(d => ids.includes(d.id));
+          this.isLoadingDocuments = false;
+        });
+      },
+      error: (err) => {
+        console.error('Remote search error:', err);
+        // fallback to local search when server search fails
+        this.performSearch();
+        this.isLoadingDocuments = false;
+      }
+    });
   }
 
   showAllDocuments(): void {

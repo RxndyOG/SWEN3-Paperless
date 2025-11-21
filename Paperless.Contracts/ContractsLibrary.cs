@@ -5,7 +5,8 @@ namespace Paperless.Contracts
     public class MessageTransferObject
     {
         public int DocumentId { get; set; }
-        public required string Text { get; set; }
+        public required string Summary { get; set; }
+        public required string OcrText { get; set; }
         public required DocumentTag Tag { get; set; } = 0;
     }
 
@@ -44,6 +45,13 @@ namespace Paperless.Contracts
         public string Pass { get; set; } = "";
         public required string InputQueue { get; set; }
         public required string OutputQueue { get; set; }
+    }
+
+    public class ElasticOptions     {
+        public string Uri { get; set; } = "";
+        public string Index { get; set; } = "";
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
     }
 
     public class MinioOptions

@@ -7,6 +7,7 @@ using PaperlessREST.Models;
 using PaperlessREST.Services;
 using System.Text.Json;
 using Paperless.Contracts;
+using Paperless.Contracts.SharedServices;
 
 namespace PaperlessREST.Controllers;
 
@@ -16,6 +17,7 @@ public interface IDocumentsController
     Task<IActionResult> Upload([FromForm] IFormFile file);
     Task<IActionResult> GetDocById(int id);
     Task<IActionResult> DeleteDocById(int id);
+    Task<IActionResult> ElasticSearch(string query);
 }
 
 
@@ -28,17 +30,20 @@ public class DocumentsController : ControllerBase, IDocumentsController
     private readonly ILogger<DocumentsController> _logger;
     private readonly IObjectStorage _storage;
     private readonly RestQueueService _mq;
+    private readonly IElasticService _elastic;
 
     public DocumentsController(
         AppDbContext db,
         ILogger<DocumentsController> logger,
         IObjectStorage storage,
-        RestQueueService mq)
+        RestQueueService mq,
+        IElasticService elastic)
     {
         _db = db;
         _logger = logger;
         _storage = storage;
         _mq = mq;
+        _elastic = elastic;
     }
 
     [HttpGet]
@@ -89,7 +94,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
 
             var doc = new Document
             {
-                FileName = Path.GetFileName(file.FileName),
+                FileName = Path.GetFileName(file.FileName)!,
                 ObjectKey = objectKey,
                 ContentType = "application/pdf", //enforce PDF type in metadata
                 SizeBytes = file.Length,
@@ -259,6 +264,25 @@ public class DocumentsController : ControllerBase, IDocumentsController
         {
             _logger.LogError(ex, "Unexpected error while deleting document {Id}", id);
             return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error");
+        }
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> ElasticSearch([FromQuery] string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return BadRequest("Query parameter is required.");
+
+        try
+        {
+            var result = await _elastic.SearchAsync(query);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Elasticsearch search failed for query: {Query}", query);
+            // TEMP: expose exception for debugging; remove/replace with generic message later
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
     }
 }
