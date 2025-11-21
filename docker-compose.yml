@@ -47,6 +47,12 @@ services:
       MINIO__ACCESSKEY: ${MINIO__ACCESSKEY}
       MINIO__SECRETKEY: ${MINIO__SECRETKEY}
       MINIO__USESSL: "false"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
 
   aiworker:
     build: 
@@ -67,6 +73,12 @@ services:
       Elastic__Index: paperless-documents
       Elastic__User: elastic
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
         
   rest:
     build: 
@@ -90,6 +102,13 @@ services:
       Elastic__Index: paperless-documents
       Elastic__User: elastic
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+    restart: on-failure
+
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
 
     depends_on:
       postgres:
