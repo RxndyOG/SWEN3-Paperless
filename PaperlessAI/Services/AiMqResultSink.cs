@@ -1,5 +1,6 @@
 ﻿using GenerativeAI.Types;
 using Microsoft.Extensions.Options;
+using Paperless.Contracts.SharedServices;
 using Paperless.Contracts;
 using PaperlessAI.Abstractions;
 using RabbitMQ.Client;
@@ -20,15 +21,21 @@ namespace PaperlessAI.Services
         private readonly IModel _channel;
         private readonly RabbitOptions _options;
         private readonly IConnection _connection;
+        private readonly ElasticOptions _elasticOptions;
+        private readonly IElasticService _elasticService;
 
         public AiMqResultSink(
             ILogger<AiMqResultSink> log,
             IOptions<RabbitOptions> options,
-            IConnection connection)
+            IConnection connection,
+            IOptions<ElasticOptions> elasticOptions,
+            IElasticService elasticService)
         {
             _log = log;
             _options = options.Value;
             _connection = connection;
+            _elasticOptions = elasticOptions.Value;
+            _elasticService = elasticService;
 
             _channel = connection.CreateModel();
             _channel.QueueDeclare(
@@ -39,11 +46,11 @@ namespace PaperlessAI.Services
                 arguments: null);
         }
 
-        public Task OnGeminiCompletedAsync(int documentId, string text, DocumentTag tag, CancellationToken ct)
+        public Task OnGeminiCompletedAsync(int documentId, string summarizedText, DocumentTag tag, string ocrText, CancellationToken ct)
         {
             try
             {
-                var message = new MessageTransferObject { DocumentId = documentId, Text = text , Tag = tag};
+                var message = new MessageTransferObject { DocumentId = documentId, OcrText = ocrText , Tag = tag, Summary = summarizedText};
                 var payload = JsonSerializer.Serialize<MessageTransferObject>(message);
                 var body = Encoding.UTF8.GetBytes(payload);
 
@@ -52,7 +59,7 @@ namespace PaperlessAI.Services
                     _log.LogWarning("Cancellation requested before publishing summarized text for document {id}", documentId);
                     ct.ThrowIfCancellationRequested();
                 }
-                if(message.Text == null)
+                if(message.OcrText == null)
                 {
                     _log.LogWarning("Summary is null for document {id}", documentId);
                     throw new NullReferenceException("Summary is null");
@@ -69,6 +76,10 @@ namespace PaperlessAI.Services
                     body: body,
                     basicProperties: null
                     );
+
+
+                var doc = new MessageTransferObject { DocumentId = documentId, OcrText = ocrText, Tag = tag, Summary = summarizedText };
+                _elasticService.IndexAsync(doc, ct).GetAwaiter().GetResult();
 
                 _log.LogInformation("Published summarized text for document {id} to {queue}", documentId, _options.OutputQueue);
                 _log.LogInformation("Message that was published: {payload}", Encoding.UTF8.GetString(body));

@@ -9,6 +9,6 @@ namespace PaperlessAI.Abstractions
 {
     public interface IGenAiResultSink
     {
-        Task OnGeminiCompletedAsync(int documentId, string summarizedText, DocumentTag tag, CancellationToken ct);
+        Task OnGeminiCompletedAsync(int documentId, string summarizedText, DocumentTag tag, string ocrText, CancellationToken ct);
     }
 }

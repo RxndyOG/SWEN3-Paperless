@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Paperless.ES": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}

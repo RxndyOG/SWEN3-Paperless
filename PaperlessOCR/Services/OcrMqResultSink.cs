@@ -42,7 +42,7 @@ public class OcrMqResultSink : IOcrResultSink, IDisposable
         {
             _log.LogInformation("OCR finished: {ocrText}", text);
 
-            var message = new MessageTransferObject { DocumentId = documentId, Text = text , Tag = DocumentTag.Default};
+            var message = new MessageTransferObject { DocumentId = documentId, OcrText = text , Tag = DocumentTag.Default, Summary = ""};
 
             var payload = JsonSerializer.Serialize(message);
             var body = Encoding.UTF8.GetBytes(payload);

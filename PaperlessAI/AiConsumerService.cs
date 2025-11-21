@@ -128,11 +128,11 @@ namespace PaperlessAI
 
         public async Task ProcessAsync(MessageTransferObject message, CancellationToken ct)
         {
-            _logger.LogInformation("Received text from OCR: ID = {id}\n {text}", message.DocumentId, message.Text);
-            var summary = await _genEngine.SummarizeAsync(message.Text, ct);
+            _logger.LogInformation("Received text from OCR: ID = {id}\n {text}", message.DocumentId, message.OcrText);
+            var summary = await _genEngine.SummarizeAsync(message.OcrText, ct);
             _logger.LogInformation("Response from Gemini: {response}", summary);
-            var tag = await _genEngine.ClassifyAsync(message.Text, ct);
-            await _genResultSink.OnGeminiCompletedAsync(message.DocumentId, summary, tag, ct);
+            var tag = await _genEngine.ClassifyAsync(message.OcrText, ct);
+            await _genResultSink.OnGeminiCompletedAsync(message.DocumentId, summary, tag, message.OcrText, ct);
         }
     }
 }

@@ -83,7 +83,7 @@ public class RestConsumerService : BackgroundService
                 }
                 else
                 {
-                    doc.SummarizedContent = msg.Text;
+                    doc.SummarizedContent = msg.Summary;
                     doc.Tag = msg.Tag;
                     await db.SaveChangesAsync();
                     _logger.LogInformation("Updated summary for document {Id}", msg.DocumentId);
