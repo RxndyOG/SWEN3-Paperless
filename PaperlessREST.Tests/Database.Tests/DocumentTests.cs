@@ -8,14 +8,17 @@ using Xunit;
 using Microsoft.Extensions.Logging;
 using PaperlessREST.Services;
 using Moq;
+using Paperless.Contracts.SharedServices;
 
 public class DocumentRepositoryTests : IClassFixture<PostgresFixture>
 {
     private readonly PostgresFixture _fixture;
+    private readonly IElasticService _elasticService;
 
-    public DocumentRepositoryTests(PostgresFixture fixture)
+    public DocumentRepositoryTests(PostgresFixture fixture, IElasticService elasticService)
     {
         _fixture = fixture;
+        _elasticService = new Mock<IElasticService>().Object;
     }
 
     [Fact]
@@ -82,6 +85,8 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
 
         // Act
         IActionResult result;
+        var elasticMock = new Mock<IElasticService>();
+
         using (var db = NewDb())
         {
             var logger = new LoggerFactory().CreateLogger<DocumentsController>();
@@ -92,9 +97,10 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
                 .Setup(s => s.GetPresignedGetUrl(It.IsAny<string>(), It.IsAny<TimeSpan>()))
                 .Throws(new Exception("presign fail"));
 
+
             var mqMock = new Mock<RestQueueService>();
 
-            var controller = new DocumentsController(db, logger, storageMock.Object, mqMock.Object);
+            var controller = new DocumentsController(db, logger, storageMock.Object, mqMock.Object, elasticMock.Object);
 
             result = await controller.GetDocById(id);
         }
@@ -131,13 +137,14 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
         // Act
         IActionResult deleteResult;
         List<Document> documentList;
+        var elasticMock = new Mock<IElasticService>();
 
         using (var db = NewDb())
         {
             var logger = new LoggerFactory().CreateLogger<DocumentsController>();
             var storage = new Mock<IObjectStorage>().Object;
             var mq = new Mock<RestQueueService>().Object;
-            var controller = new DocumentsController(db, logger, storage, mq);
+            var controller = new DocumentsController(db, logger, storage, mq, elasticMock.Object);
 
             // Call DELETE
             deleteResult = await controller.DeleteDocById(id);

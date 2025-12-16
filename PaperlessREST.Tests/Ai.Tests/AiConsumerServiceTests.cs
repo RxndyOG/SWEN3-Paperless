@@ -61,7 +61,8 @@ public class AiConsumerServiceTests
         {
             DocumentId = 42,
             OcrText = inputText,
-            Tag = DocumentTag.Default // incoming tag is ignored/overwritten by classification
+            Tag = DocumentTag.Default, // incoming tag is ignored/overwritten by classification
+            Summary = summary
         };
 
         // Act
@@ -77,7 +78,7 @@ public class AiConsumerServiceTests
             Times.Once);
 
         sinkMock.Verify(
-            s => s.OnGeminiCompletedAsync(42, summary, classifiedTag, It.IsAny<CancellationToken>()),
+            s => s.OnGeminiCompletedAsync(42, summary, classifiedTag, inputText, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -94,12 +95,14 @@ public class AiConsumerServiceTests
 
         // Classification should not be called if summarize already failed
         var sut = CreateService(engineMock, sinkMock);
+        var summary = "Summary";
 
         var message = new MessageTransferObject
         {
             DocumentId = 99,
             OcrText = "Something",
-            Tag = DocumentTag.Default
+            Tag = DocumentTag.Default,
+            Summary = summary
         };
 
         // Act & Assert
@@ -111,7 +114,7 @@ public class AiConsumerServiceTests
             Times.Never);
 
         sinkMock.Verify(
-            s => s.OnGeminiCompletedAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<DocumentTag>(), It.IsAny<CancellationToken>()),
+            s => s.OnGeminiCompletedAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<DocumentTag>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -139,7 +142,8 @@ public class AiConsumerServiceTests
         {
             DocumentId = 7,
             OcrText = inputText,
-            Tag = DocumentTag.Default
+            Tag = DocumentTag.Default,
+            Summary = summary,
         };
 
         // Act & Assert
@@ -153,7 +157,7 @@ public class AiConsumerServiceTests
 
         // Sink was NOT called because classification failed
         sinkMock.Verify(
-            s => s.OnGeminiCompletedAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<DocumentTag>(), It.IsAny<CancellationToken>()),
+            s => s.OnGeminiCompletedAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<DocumentTag>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 }
