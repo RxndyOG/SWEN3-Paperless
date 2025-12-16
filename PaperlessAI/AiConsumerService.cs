@@ -42,7 +42,9 @@ namespace PaperlessAI
                     HostName = _opts.Host,
                     UserName = _opts.User,
                     Password = _opts.Pass,
-                    DispatchConsumersAsync = true
+                    DispatchConsumersAsync = true,
+                AutomaticRecoveryEnabled = true,
+                NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
                 };
 
                 _conn = factory.CreateConnection();

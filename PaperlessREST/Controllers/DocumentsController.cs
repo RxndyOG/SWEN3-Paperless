@@ -281,7 +281,6 @@ public class DocumentsController : ControllerBase, IDocumentsController
         catch (Exception ex)
         {
             _logger.LogError(ex, "Elasticsearch search failed for query: {Query}", query);
-            // TEMP: expose exception for debugging; remove/replace with generic message later
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
     }

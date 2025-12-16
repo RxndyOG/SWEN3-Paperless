@@ -66,10 +66,10 @@ namespace Paperless.Contracts.SharedServices
 
             var fields = new[]
             {
-        nameof(MessageTransferObject.OcrText),
-        nameof(MessageTransferObject.Summary),
-        nameof(MessageTransferObject.Tag)
-    };
+                nameof(MessageTransferObject.OcrText),
+                nameof(MessageTransferObject.Summary),
+                nameof(MessageTransferObject.Tag)
+            };
 
             var payload = JsonSerializer.Serialize(new
             {

@@ -78,7 +78,14 @@ namespace PaperlessAI.Services
                     );
 
 
-                var doc = new MessageTransferObject { DocumentId = documentId, OcrText = ocrText, Tag = tag, Summary = summarizedText };
+                //define DTO for elasticsearch
+                var doc = new MessageTransferObject { 
+                    DocumentId = documentId, 
+                    OcrText = ocrText, 
+                    Tag = tag, 
+                    Summary = summarizedText };
+
+                //insert document into elasticservice
                 _elasticService.IndexAsync(doc, ct).GetAwaiter().GetResult();
 
                 _log.LogInformation("Published summarized text for document {id} to {queue}", documentId, _options.OutputQueue);

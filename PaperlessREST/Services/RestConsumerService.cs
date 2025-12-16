@@ -36,7 +36,9 @@ public class RestConsumerService : BackgroundService
             HostName = _config["RabbitMQ:Host"],
             UserName = _config["RabbitMQ:User"],
             Password = _config["RabbitMQ:Pass"],
-            DispatchConsumersAsync = true
+            DispatchConsumersAsync = true,
+            AutomaticRecoveryEnabled = true,
+            NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
         };
 
         _conn = factory.CreateConnection();
