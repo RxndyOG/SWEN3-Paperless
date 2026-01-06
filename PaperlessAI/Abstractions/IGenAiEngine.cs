@@ -11,5 +11,7 @@ namespace PaperlessAI.Abstractions
     {
         Task<string> SummarizeAsync(string textToSummarize, CancellationToken ct);
         Task<DocumentTag> ClassifyAsync(string textToClassify, CancellationToken ct);
+        public Task<string> ChangeSummaryAsync(string oldText, string newText, CancellationToken ct);
+
     }
 }

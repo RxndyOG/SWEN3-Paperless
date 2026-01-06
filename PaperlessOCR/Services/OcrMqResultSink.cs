@@ -36,15 +36,16 @@ public class OcrMqResultSink : IOcrResultSink, IDisposable
             arguments: null);
     }
 
-    public Task OnOcrCompletedAsync(int documentId, string text, CancellationToken ct)
+    public Task OnOcrCompletedAsync(int documentId, int documentVersionId, int? diffBaseVersionId, string ocrText, CancellationToken ct)
     {
         try
         {
-            _log.LogInformation("OCR finished: {ocrText}", text);
+            _log.LogInformation("OCR finished: {ocrText}", ocrText);
 
-            var message = new MessageTransferObject { DocumentId = documentId, OcrText = text , Tag = DocumentTag.Default, Summary = ""};
+            var msg = new OcrCompletedMessage(documentId, documentVersionId, diffBaseVersionId, ocrText);
 
-            var payload = JsonSerializer.Serialize(message);
+            var payload = JsonSerializer.Serialize(msg);
+
             var body = Encoding.UTF8.GetBytes(payload);
 
             if(body == null)

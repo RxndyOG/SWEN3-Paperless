@@ -10,6 +10,32 @@ namespace Paperless.Contracts
         public required DocumentTag Tag { get; set; } = 0;
     }
 
+    public record VersionPipelineMessage(
+    int DocumentId,
+    int DocumentVersionId,
+    int? DiffBaseVersionId,
+    string Bucket,
+    string ObjectKey,
+    string FileName,
+    string ContentType
+);
+
+    public record OcrCompletedMessage(
+    int DocumentId,
+    int DocumentVersionId,
+     int? DiffBaseVersionId,
+    string OcrText
+);
+
+    public record GenAiCompletedMessage(
+    int DocumentId,
+    int DocumentVersionId,
+    string Summary,
+    DocumentTag Tag,
+    string OcrText,
+    string? ChangeSummary
+);
+
     public enum DocumentTag
 {
     Default = 0,
@@ -25,6 +51,7 @@ namespace Paperless.Contracts
 
     public record UploadedDocMessage(
     int DocumentId,
+    int DocumentVersionId,
     string Bucket,
     string ObjectKey,
     string FileName,

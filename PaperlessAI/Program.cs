@@ -10,6 +10,8 @@ using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http;
 using System.Text;
+using Paperless.AI.Abstractions;
+using Paperless.AI.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -77,6 +79,7 @@ builder.Services.AddSingleton<IConnection>(sp =>
 
 builder.Services.AddSingleton<IGenAiEngine, GenAiEngine>();
 builder.Services.AddSingleton<IGenAiResultSink, AiMqResultSink>();
+builder.Services.AddSingleton<IVersionTextClient, VersionTextClient>();
 builder.Services.AddHostedService<AiConsumerService>();
 
 var host = builder.Build();

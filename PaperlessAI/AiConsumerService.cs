@@ -13,7 +13,8 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-
+using Rest;
+using Paperless.AI.Abstractions;
 namespace PaperlessAI
 {
     public class AiConsumerService : BackgroundService
@@ -22,15 +23,23 @@ namespace PaperlessAI
         private readonly RabbitOptions _opts;
         private readonly IGenAiEngine _genEngine;
         private readonly IGenAiResultSink _genResultSink;
+        private readonly IVersionTextClient _restClient;
 
         private IConnection? _conn;
         private IModel? _channel;
-        public AiConsumerService(ILogger<AiConsumerService> logger, IOptions<RabbitOptions> opts, IOptions<GenAiOptions> genOptions, IGenAiEngine genEngine, IGenAiResultSink genResultSink)
+        public AiConsumerService(
+            ILogger<AiConsumerService> logger,
+            IOptions<RabbitOptions> opts,
+            IOptions<GenAiOptions> genOptions,
+            IGenAiEngine genEngine,
+            IGenAiResultSink genResultSink,
+            IVersionTextClient restClient)
         {
             _logger = logger;
             _opts = opts.Value;
             _genEngine = genEngine;
             _genResultSink = genResultSink;
+            _restClient = restClient;
         }
 
         public override async Task StartAsync(System.Threading.CancellationToken cancellationToken)
@@ -92,7 +101,7 @@ namespace PaperlessAI
                 {
                     var message = Encoding.UTF8.GetString(ea.Body.ToArray());
                     _logger.LogInformation("Raw message from ocr_finished: {json}", message);
-                    var payload = JsonSerializer.Deserialize<MessageTransferObject>(message)!;
+                    var payload = JsonSerializer.Deserialize<OcrCompletedMessage>(message)!;
                     await ProcessAsync(payload, ct);
 
                     _channel.BasicAck(ea.DeliveryTag, multiple: false);
@@ -128,13 +137,38 @@ namespace PaperlessAI
             return Task.CompletedTask;
         }
 
-        public async Task ProcessAsync(MessageTransferObject message, CancellationToken ct)
+        public async Task ProcessAsync(OcrCompletedMessage message, CancellationToken ct)
         {
-            _logger.LogInformation("Received text from OCR: ID = {id}\n {text}", message.DocumentId, message.OcrText);
+            _logger.LogInformation("Received text from OCR: doc={DocId} ver={VerId} base={BaseId}",
+                message.DocumentId, message.DocumentVersionId, message.DiffBaseVersionId);
+
             var summary = await _genEngine.SummarizeAsync(message.OcrText, ct);
-            _logger.LogInformation("Response from Gemini: {response}", summary);
             var tag = await _genEngine.ClassifyAsync(message.OcrText, ct);
-            await _genResultSink.OnGeminiCompletedAsync(message.DocumentId, summary, tag, message.OcrText, ct);
+
+            string changeSummary;
+
+            if (message.DiffBaseVersionId is null)
+            {
+                changeSummary = "Initial version.";
+            }
+            else
+            {
+                // 1) fetch base version OCR from REST
+                var baseText = await _restClient.GetVersionOcrTextAsync(message.DiffBaseVersionId.Value, ct);
+
+                // 2) ask Gemini for change summary
+                changeSummary = await _genEngine.ChangeSummaryAsync(baseText, message.OcrText, ct);
+            }
+
+            await _genResultSink.OnGeminiCompletedAsync(
+                message.DocumentId,
+                message.DocumentVersionId,
+                summary,
+                tag,
+                message.OcrText,
+                changeSummary,
+                ct);
         }
+
     }
 }

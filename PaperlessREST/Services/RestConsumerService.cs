@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Paperless.Contracts;
@@ -69,37 +70,78 @@ public class RestConsumerService : BackgroundService
         try
         {
             var json = Encoding.UTF8.GetString(ea.Body.ToArray());
-            _logger.LogInformation("REST received summary: {json}", json);
+            _logger.LogInformation("REST received GenAI result: {json}", json);
 
-            var msg = JsonSerializer.Deserialize<MessageTransferObject>(json);
-
-            if (msg != null)
+            var msg = JsonSerializer.Deserialize<GenAiCompletedMessage>(json);
+            if (msg == null)
             {
-                using var scope = _services.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-                var doc = await db.Documents.FindAsync(msg.DocumentId);
-                if (doc == null)
-                {
-                    _logger.LogWarning("Document {Id} not found", msg.DocumentId);
-                }
-                else
-                {
-                    doc.SummarizedContent = msg.Summary;
-                    doc.Tag = msg.Tag;
-                    await db.SaveChangesAsync();
-                    _logger.LogInformation("Updated summary for document {Id}", msg.DocumentId);
-                }
+                _logger.LogWarning("GenAI message deserialized to null. Acking.");
+                _channel?.BasicAck(ea.DeliveryTag, false);
+                return;
             }
+
+            if (msg.DocumentVersionId <= 0)
+            {
+                _logger.LogWarning("GenAI message missing DocumentVersionId (DocumentId={DocumentId}). Acking.", msg.DocumentId);
+                _channel?.BasicAck(ea.DeliveryTag, false);
+                return;
+            }
+
+            using var scope = _services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            // Update the specific version row (NOT current version!)
+            var ver = await db.DocumentVersions
+                .FirstOrDefaultAsync(v => v.Id == msg.DocumentVersionId);
+
+            if (ver == null)
+            {
+                _logger.LogWarning(
+                    "DocumentVersion {VersionId} not found for DocumentId {DocumentId}. Acking.",
+                    msg.DocumentVersionId, msg.DocumentId);
+
+                _channel?.BasicAck(ea.DeliveryTag, false);
+                return;
+            }
+
+            // Optional: sanity check the doc id matches (helps debugging)
+            if (ver.DocumentId != msg.DocumentId)
+            {
+                _logger.LogWarning(
+                    "Mismatch: message DocumentId={MessageDocId} but version {VersionId} belongs to DocumentId={DbDocId}. Acking.",
+                    msg.DocumentId, ver.Id, ver.DocumentId);
+
+                _channel?.BasicAck(ea.DeliveryTag, false);
+                return;
+            }
+
+            // Apply AI results to that version
+            ver.SummarizedContent = msg.Summary ?? "";
+            ver.Tag = msg.Tag;
+
+            // If you include OCR text in the message and want to store it in version.Content:
+            if (!string.IsNullOrWhiteSpace(msg.OcrText))
+                ver.Content = msg.OcrText;
+
+            // Later (for your unique feature):
+            if (!string.IsNullOrWhiteSpace(msg.ChangeSummary))
+                ver.ChangeSummary = msg.ChangeSummary;
+
+            await db.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Updated GenAI fields for DocumentId {DocumentId}, VersionId {VersionId}",
+                msg.DocumentId, ver.Id);
 
             _channel?.BasicAck(ea.DeliveryTag, false);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to process GenAI summary");
+            _logger.LogError(ex, "Failed to process GenAI message");
             _channel?.BasicNack(ea.DeliveryTag, false, requeue: true);
         }
     }
+
 
     public override void Dispose()
     {
