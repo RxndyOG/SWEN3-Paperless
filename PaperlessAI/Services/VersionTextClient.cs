@@ -17,7 +17,7 @@ namespace Paperless.AI.Services
 
         public async Task<string> GetVersionOcrTextAsync(int versionId, CancellationToken ct)
         {
-            var res = await _http.GetAsync($"api/documents/versions/{versionId}/ocr", ct);
+            var res = await _http.GetAsync($"/api/documents/versions/{versionId}/ocr", ct);
             res.EnsureSuccessStatusCode();
 
             using var stream = await res.Content.ReadAsStreamAsync(ct);

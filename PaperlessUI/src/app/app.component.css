@@ -544,12 +544,18 @@ body {
   padding: 20px;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 
 .document-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-color: #007bff;
+}
+
+.document-card.selected {
+  border: 1px solid #4caf50;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .document-header {
@@ -617,6 +623,41 @@ body {
   background: #dc3545;
   border-color: #dc3545;
   color: white;
+}
+
+/* Change summary section */
+.change-summary {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e0e6ed;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.change-summary-header {
+  font-size: 14px;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.change-summary-meta {
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.change-summary-body {
+  color: #374151;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.change-summary-body ul,
+.change-summary-body ol {
+  margin: 6px 0 0 18px;
 }
 
 /* Empty States */
@@ -701,3 +742,185 @@ body {
       font-size: 3rem;
     }
   }
+
+/* Version history styles */
+.version-actions {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #e0e6ed;
+}
+
+.version-toggle-btn {
+  background: #f8fafc;
+  border: 1px solid #d1d5db;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.version-toggle-btn:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.version-count {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.version-history {
+  margin-top: 10px;
+  padding: 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.version-loading {
+  color: #6b7280;
+  font-style: italic;
+  padding: 8px;
+}
+
+.version-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.version-item {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.version-item:hover {
+  border-color: #9ca3af;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.version-item.current-version {
+  border-color: #4caf50;
+  background: #f0fdf4;
+}
+
+.version-item.selected-version {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.version-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.version-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.version-info strong {
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.version-badge {
+  background: #4caf50;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.version-size {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.version-summary {
+  margin: 8px 0;
+  padding: 8px;
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+.version-summary-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.version-summary-text {
+  font-size: 12px;
+  color: #374151;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.version-actions-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.version-action-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+}
+
+.version-action-btn.download {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.version-action-btn.download:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.version-action-btn.set-current {
+  border-color: #4caf50;
+  color: #4caf50;
+}
+
+.version-action-btn.set-current:hover {
+  background: #4caf50;
+  color: white;
+}
+
+.version-action-btn.view-ocr {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.version-action-btn.view-ocr:hover {
+  background: #f59e0b;
+  color: white;
+}
+
+.no-versions {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  padding: 16px;
+}

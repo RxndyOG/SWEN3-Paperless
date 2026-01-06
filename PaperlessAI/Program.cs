@@ -79,8 +79,14 @@ builder.Services.AddSingleton<IConnection>(sp =>
 
 builder.Services.AddSingleton<IGenAiEngine, GenAiEngine>();
 builder.Services.AddSingleton<IGenAiResultSink, AiMqResultSink>();
-builder.Services.AddSingleton<IVersionTextClient, VersionTextClient>();
-builder.Services.AddHostedService<AiConsumerService>();
+builder.Services.AddHttpClient<IVersionTextClient, VersionTextClient>((sp, http) =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+
+    // Use the REST container name inside docker compose network
+    var baseUrl = cfg["REST_BASEURL"] ?? "http://rest:8080/";
+    http.BaseAddress = new Uri(baseUrl);
+}); builder.Services.AddHostedService<AiConsumerService>();
 
 var host = builder.Build();
 host.Run();

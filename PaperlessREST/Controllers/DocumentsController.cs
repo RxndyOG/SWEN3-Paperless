@@ -62,7 +62,6 @@ public class DocumentsController : ControllerBase, IDocumentsController
                     d.FileName,
                     d.CreatedAt,
                     d.CurrentVersionId,
-                    // return a single current-version projection (not an IQueryable/collection)
                     Current = _db.DocumentVersions
                         .Where(v => v.Id == d.CurrentVersionId)
                         .Select(v => new
@@ -93,11 +92,91 @@ public class DocumentsController : ControllerBase, IDocumentsController
         var v = await _db.DocumentVersions
             .AsNoTracking()
             .Where(x => x.Id == versionId)
-            .Select(x => new { x.Id, OcrText = x.Content }) // or x.OcrText if you renamed it
+            .Select(x => new { x.Id, OcrText = x.Content })
             .FirstOrDefaultAsync();
 
         if (v == null) return NotFound();
         return Ok(v);
+    }
+
+    [HttpGet("{id:int}/versions")]
+    public async Task<IActionResult> GetVersions(int id)
+    {
+        var doc = await _db.Documents.AsNoTracking()
+            .Where(d => d.Id == id)
+            .Select(d => new
+            {
+                d.Id,
+                d.FileName,
+                d.CurrentVersionId,
+                Versions = d.Versions
+                    .OrderByDescending(v => v.VersionNumber)
+                    .Select(v => new
+                    {
+                        v.Id,
+                        v.VersionNumber,
+                        v.SizeBytes,
+                        v.ContentType,
+                        v.Tag,
+                        v.SummarizedContent,
+                        v.ChangeSummary,
+                        v.DiffBaseVersionId
+                    })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        if (doc == null) return NotFound();
+        return Ok(doc);
+    }
+
+    [HttpGet("versions/{versionId:int}")]
+    public async Task<IActionResult> GetVersion(int versionId)
+    {
+        var v = await _db.DocumentVersions.AsNoTracking()
+            .Where(x => x.Id == versionId)
+            .Select(x => new
+            {
+                x.Id,
+                x.DocumentId,
+                x.VersionNumber,
+                x.Tag,
+                x.SummarizedContent,
+                x.ChangeSummary,
+                OcrText = x.Content
+            })
+            .FirstOrDefaultAsync();
+
+        if (v == null) return NotFound();
+        return Ok(v);
+    }
+
+    [HttpGet("versions/{versionId:int}/file")]
+    public async Task<IActionResult> DownloadVersion(int versionId)
+    {
+        var v = await _db.DocumentVersions.AsNoTracking()
+            .Where(x => x.Id == versionId)
+            .Select(x => new { x.ObjectKey, x.ContentType })
+            .FirstOrDefaultAsync();
+
+        if (v == null) return NotFound();
+
+        var stream = await _storage.GetObjectAsync(v.ObjectKey);
+        return File(stream, v.ContentType, fileDownloadName: $"version-{versionId}.pdf");
+    }
+
+    [HttpPut("{id:int}/currentVersion/{versionId:int}")]
+    public async Task<IActionResult> SetCurrentVersion(int id, int versionId)
+    {
+        var doc = await _db.Documents.FirstOrDefaultAsync(d => d.Id == id);
+        if (doc == null) return NotFound();
+
+        var exists = await _db.DocumentVersions.AnyAsync(v => v.Id == versionId && v.DocumentId == id);
+        if (!exists) return BadRequest("Version does not belong to document.");
+
+        doc.CurrentVersionId = versionId;
+        await _db.SaveChangesAsync();
+        return NoContent();
     }
 
     //Accept only PDF files (enforced). Stores the file in MinIO and metadata in DB.
@@ -145,12 +224,13 @@ public class DocumentsController : ControllerBase, IDocumentsController
                 ? 1
                 : doc.Versions.Max(v => v.VersionNumber) + 1;
 
+            int? baseVersionId = doc.CurrentVersionId;
+
             var newVersion = new DocumentVersion
             {
                 DocumentId = doc.Id,
                 VersionNumber = nextVersionNumber,
-                DiffBaseVersionId = doc.CurrentVersionId == 0 ? null : doc.CurrentVersionId,
-
+                DiffBaseVersionId = baseVersionId,
                 ObjectKey = objectKey,
                 ContentType = "application/pdf",
                 SizeBytes = file.Length
@@ -165,14 +245,17 @@ public class DocumentsController : ControllerBase, IDocumentsController
             await tx.CommitAsync();
 
             try
-            { 
-                var msg = new UploadedDocMessage(
-                    doc.Id,
-                    newVersion.Id,
-                    Bucket: "documents", //or read from config
-                    objectKey,
-                    doc.FileName!,
-                    "application/pdf");
+            {
+                var msg = new VersionPipelineMessage(
+                    DocumentId: doc.Id,
+                    DocumentVersionId: newVersion.Id,
+                    VersionNumber: newVersion.VersionNumber,
+                    DiffBaseVersionId: baseVersionId,
+                    Bucket: "documents",
+                    ObjectKey: objectKey,
+                    FileName: doc.FileName!,
+                    ContentType: "application/pdf"
+                    );
 
                 _mq.PublishTo(JsonSerializer.Serialize(msg), QueueNames.Documents);
                 _logger.LogInformation("Published upload message for document id {Id} to {Queue}", doc.Id, QueueNames.Documents);
@@ -201,7 +284,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
         {
             _logger.LogError(dbEx, "Database error while saving metadata for {ObjectKey}", objectKey);
 
-            // try to cleanup stored object
+            //try to cleanup stored object
             try
             {
                 await _storage.RemoveObjectAsync(objectKey);
@@ -302,7 +385,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
     {
         try
         {
-            // Load document + versions (we need object keys)
+            //Load document + versions
             var doc = await _db.Documents
                 .Include(d => d.Versions)
                 .FirstOrDefaultAsync(d => d.Id == id);
@@ -313,7 +396,6 @@ public class DocumentsController : ControllerBase, IDocumentsController
                 return NotFound();
             }
 
-            // 1) Try to remove all objects from MinIO (best-effort, but track failures)
             var failedKeys = new List<string>();
 
             foreach (var v in doc.Versions)
@@ -336,9 +418,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
                         v.ObjectKey, id, v.Id);
                 }
             }
-
-            // If you want strict behavior: abort if ANY MinIO delete failed.
-            // Otherwise you can still delete DB and just report partial failure.
+            
             if (failedKeys.Count > 0)
             {
                 return StatusCode(StatusCodes.Status502BadGateway,
@@ -346,13 +426,10 @@ public class DocumentsController : ControllerBase, IDocumentsController
                     $"Aborting DB deletion to avoid orphaned objects. Keys: {string.Join(", ", failedKeys)}");
             }
 
-            // 2) DB delete inside a transaction
             await using var tx = await _db.Database.BeginTransactionAsync();
 
-            // Delete versions first (or rely on cascade, but explicit is safer for demos)
             _db.DocumentVersions.RemoveRange(doc.Versions);
 
-            // Then delete document
             _db.Documents.Remove(doc);
 
             var changes = await _db.SaveChangesAsync();

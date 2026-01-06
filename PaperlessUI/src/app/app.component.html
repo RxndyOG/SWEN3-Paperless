@@ -13,7 +13,6 @@
       {{ isUploading ? 'Uploading...' : 'Add Document' }}
     </button>
     
-    <!-- Hidden file input -->
     <input type="file" 
            id="fileInput" 
            accept=".pdf" 
@@ -147,7 +146,10 @@
           <p>Try adjusting your search terms</p>
         </div>
 
-        <div *ngFor="let doc of filteredDocuments" class="document-card">
+        <div *ngFor="let doc of filteredDocuments"
+             class="document-card"
+             [class.selected]="selectedDocument?.id === doc.id"
+             (click)="selectDocument(doc)">
           <div class="document-header">
             <div class="document-icon">📄</div>
             <div class="document-info">
@@ -158,16 +160,18 @@
               </p>
             </div>
           </div>
-          
+
           <div class="document-actions">
-            <button class="action-btn download" (click)="downloadDocument(doc)" title="Download">
+            <button class="action-btn download"
+                    (click)="$event.stopPropagation(); downloadDocument(doc)"
+                    title="Download">
               ⬇️
             </button>
-            <button class="action-btn delete" (click)="deleteDocument(doc)" title="Delete">
+            <button class="action-btn delete"
+                    (click)="$event.stopPropagation(); deleteDocument(doc)"
+                    title="Delete">
               🗑️
             </button>
-
-            <!-- Tag badge shown next to action buttons -->
             <div class="tag-badge" *ngIf="doc.tagName" [ngClass]="doc.tagClass" title="Document tag">
               {{ doc.tagName }}
             </div>
@@ -177,7 +181,7 @@
           <div class="doc-summary" *ngIf="doc">
             <div *ngIf="doc.summary; else summaryPending" class="summary-text fade-in">
               <strong>Summary:</strong>
-              <div [innerHTML]="formatMarkdown(doc.summary)"></div>
+              <div [innerText]="doc.summary"></div>
             </div>
             <ng-template #summaryPending>
               <div class="summary-pending loading-pulse" *ngIf="!doc.summary">
@@ -185,10 +189,85 @@
               </div>
             </ng-template>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</main>
 
-<router-outlet></router-outlet>
+          <!-- Change Summary (shown when this card is selected) -->
+          <div class="change-summary"
+               *ngIf="selectedDocument?.id === doc.id && doc.changeSummary">
+            <div class="change-summary-header">
+              <strong>Changes (v{{ doc.versionNumber || doc.currentVersionId || '?' }}):</strong>
+              <span *ngIf="doc.sizeBytes" class="change-summary-meta">
+                • {{ formatBytes(doc.sizeBytes) }}
+              </span>
+            </div>
+            <div class="change-summary-body"
+                 [innerHTML]="formatMarkdown(doc.changeSummary)">
+            </div>
+          </div>
+
+          <!-- Version History Button -->
+          <div class="version-actions" *ngIf="selectedDocument?.id === doc.id">
+            <button class="version-toggle-btn" (click)="$event.stopPropagation(); toggleVersionHistory()">
+              {{ showVersionHistory ? '▼' : '▶' }} Version History
+              <span class="version-count" *ngIf="doc.versions && doc.versions.length > 0">
+                ({{ doc.versions!.length }})
+              </span>
+            </button>
+          </div>
+
+          <!-- Version History List -->
+          <div class="version-history" *ngIf="selectedDocument?.id === doc.id && showVersionHistory">
+            <div class="version-loading" *ngIf="!doc.allVersionsLoaded">
+              <em>Loading versions...</em>
+            </div>
+            
+            <div class="version-list" *ngIf="doc.allVersionsLoaded && doc.versions">
+              <div *ngFor="let version of doc.versions"
+                   class="version-item"
+                   [class.current-version]="version.id === doc.currentVersionId"
+                   [class.selected-version]="selectedVersion?.id === version.id"
+                   (click)="$event.stopPropagation(); selectVersion(version)">
+                
+                <div class="version-header">
+                  <div class="version-info">
+                    <strong>Version {{ version.versionNumber }}</strong>
+                    <span class="version-badge" *ngIf="version.id === doc.currentVersionId">Current</span>
+                  </div>
+                  <span class="version-size">{{ formatBytes(version.sizeBytes) }}</span>
+                </div>
+
+                <div class="version-summary" *ngIf="version.changeSummary">
+                  <div class="version-summary-label">Changes:</div>
+                  <div class="version-summary-text">{{ version.changeSummary }}</div>
+                </div>
+
+                <div class="version-actions-row">
+                  <button class="version-action-btn download"
+                          (click)="$event.stopPropagation(); downloadVersion(version.id!, version.versionNumber)"
+                          title="Download this version">
+                    ⬇️ Download
+                  </button>
+                  
+                  <button class="version-action-btn set-current"
+                          *ngIf="version.id !== doc.currentVersionId"
+                          (click)="$event.stopPropagation(); setCurrentVersion(doc.id, version.id!)"
+                          title="Set as current version">
+                    ✓ Set Current
+                  </button>
+                  
+                  <button class="version-action-btn view-ocr"
+                          (click)="$event.stopPropagation(); getVersionOcr(version.id!)"
+                          title="View OCR text">
+                    📝 OCR
+                  </button>
+                </div>
+              </div>
+
+              <div class="no-versions" *ngIf="doc.versions.length === 0">
+                No version history available.
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ...existing code... -->
