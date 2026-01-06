@@ -74,7 +74,7 @@ namespace PaperlessAI
             catch (BrokerUnreachableException ex)
             {
                 _logger.LogCritical(ex, "Could not reach RabbitMQ broker at {Host}", _opts.Host);
-                throw; // Let the host handle fatal startup errors
+                throw;
             }
             catch (Exception ex)
             {
@@ -109,10 +109,17 @@ namespace PaperlessAI
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error processing message. DeliveryTag: {Tag}", ea.DeliveryTag);
-                    //reject but requeue (for now)
+
+                    bool shouldRequeue = ex is TimeoutException
+                                         || ex is System.IO.IOException
+                                         || ex is RabbitMQ.Client.Exceptions.AlreadyClosedException
+                                         || (ex is OperationCanceledException && !ct.IsCancellationRequested);
+
+                    _logger.LogWarning("NACKing message {Tag}. Requeue={Requeue}. ExceptionType={Type}", ea.DeliveryTag, shouldRequeue, ex.GetType().Name);
+
                     try
                     {
-                        _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
+                        _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: shouldRequeue);
                     }
                     catch (Exception nackEx)
                     {
@@ -148,15 +155,19 @@ namespace PaperlessAI
             string changeSummary;
 
             if (message.DiffBaseVersionId is null)
-            {
                 changeSummary = "Initial version.";
-            }
+
             else
             {
-                // 1) fetch base version OCR from REST
-                var baseText = await _restClient.GetVersionOcrTextAsync(message.DiffBaseVersionId.Value, ct);
+                var baseId = message.DiffBaseVersionId.Value;
+                var baseText = await _restClient.GetVersionOcrTextAsync(baseId, ct);
 
-                // 2) ask Gemini for change summary
+                _logger.LogInformation("Fetched base OCR: baseId={BaseId} len={Len} preview={Preview}",
+                    baseId,
+                    baseText?.Length ?? -1,
+                    baseText is null ? "<null>" : baseText.Substring(0, Math.Min(60, baseText.Length)).Replace("\n", "\\n"));
+
+                //ask Gemini for change summary
                 changeSummary = await _genEngine.ChangeSummaryAsync(baseText, message.OcrText, ct);
             }
 

@@ -90,7 +90,7 @@ public class RestConsumerService : BackgroundService
             using var scope = _services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            // Update the specific version row (NOT current version!)
+            //Update the specific version row (NOT current version!)
             var ver = await db.DocumentVersions
                 .FirstOrDefaultAsync(v => v.Id == msg.DocumentVersionId);
 
@@ -104,7 +104,6 @@ public class RestConsumerService : BackgroundService
                 return;
             }
 
-            // Optional: sanity check the doc id matches (helps debugging)
             if (ver.DocumentId != msg.DocumentId)
             {
                 _logger.LogWarning(
@@ -115,15 +114,12 @@ public class RestConsumerService : BackgroundService
                 return;
             }
 
-            // Apply AI results to that version
             ver.SummarizedContent = msg.Summary ?? "";
             ver.Tag = msg.Tag;
 
-            // If you include OCR text in the message and want to store it in version.Content:
             if (!string.IsNullOrWhiteSpace(msg.OcrText))
                 ver.Content = msg.OcrText;
 
-            // Later (for your unique feature):
             if (!string.IsNullOrWhiteSpace(msg.ChangeSummary))
                 ver.ChangeSummary = msg.ChangeSummary;
 

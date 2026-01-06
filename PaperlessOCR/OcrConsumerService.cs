@@ -108,7 +108,6 @@ public class OcrConsumerService : BackgroundService, IRabbitConsumerService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing message. DeliveryTag: {Tag}", ea.DeliveryTag);
-                //reject but requeue (for now)
                 try
                 {
                     _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
@@ -180,11 +179,11 @@ public class OcrConsumerService : BackgroundService, IRabbitConsumerService
             text?.Length ?? 0, payload.DocumentId, payload.DocumentVersionId);
 
         await _sink.OnOcrCompletedAsync(
-            payload.DocumentId,
-            payload.DocumentVersionId,
-            payload.DiffBaseVersionId,   // if you added it to the pipeline message
-            text ?? "",
-            ct);
+        payload.DocumentId,
+        payload.DocumentVersionId,
+        payload.DiffBaseVersionId,
+        text,
+        ct);
     }
 
 }

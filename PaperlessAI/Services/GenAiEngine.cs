@@ -74,7 +74,20 @@ namespace PaperlessAI.Services
         {
             ct.ThrowIfCancellationRequested();
 
-            var apiKey = _genOptions.ApiKey;
+            if (string.IsNullOrWhiteSpace(oldText))
+            {
+                _log.LogWarning("Old OCR Text was empty");
+                return "Change summary not available (base OCR empty).";
+            }
+            if (string.IsNullOrWhiteSpace(newText))
+            {
+                _log.LogWarning("New OCR Text was empty");
+                return "Change summary not available (new OCR empty).";
+            }
+            else
+                _log.LogInformation($"{oldText} compared to {newText}");
+
+                var apiKey = _genOptions.ApiKey;
             if (string.IsNullOrWhiteSpace(apiKey))
                 throw new InvalidOperationException("API Key is not configured.");
 
@@ -160,14 +173,14 @@ Return only the bullet list.
                 if (Enum.TryParse<DocumentTag>(output, ignoreCase: true, out var tag))
                     return tag;
 
-                // fallback: try partial match (LLMs sometimes give surrounding quotes)
+                //fallback: try partial match (LLMs sometimes give surrounding quotes)
                 foreach (var name in Enum.GetNames<DocumentTag>())
                 {
                     if (output.Contains(name, StringComparison.OrdinalIgnoreCase))
                         return Enum.Parse<DocumentTag>(name);
                 }
 
-                // fallback category
+                //fallback category
                 return DocumentTag.Other;
             }
             catch (ArgumentException aex)

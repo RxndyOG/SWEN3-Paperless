@@ -13,6 +13,7 @@ namespace Paperless.Contracts
     public record VersionPipelineMessage(
     int DocumentId,
     int DocumentVersionId,
+    int VersionNumber,
     int? DiffBaseVersionId,
     string Bucket,
     string ObjectKey,
@@ -23,7 +24,7 @@ namespace Paperless.Contracts
     public record OcrCompletedMessage(
     int DocumentId,
     int DocumentVersionId,
-     int? DiffBaseVersionId,
+    int? DiffBaseVersionId,
     string OcrText
 );
 

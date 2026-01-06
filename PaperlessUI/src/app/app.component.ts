@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { JsonPipe, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -10,16 +10,36 @@ interface Document {
   fileName: string;
   content: string;
   createdAt: string;
-  summary?: string; // added optional summary
+  summary?: string;
   tag?: number;
   tagName?: string;
   tagClass?: string;
+  currentVersionId?: number;
+  versionNumber?: number;
+  sizeBytes?: number;
+  changeSummary?: string;
+}
+
+interface DocumentVersion {
+  id?: number;
+  versionNumber?: number;
+  sizeBytes?: number;
+  tag?: number;
+  changeSummary?: string;
+  summarizedContent?: string;
+  contentType?: string;
+  diffBaseVersionId?: number;
+}
+
+interface DocumentWithVersions extends Document {
+  versions?: DocumentVersion[];
+  allVersionsLoaded?: boolean;
 }
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, JsonPipe, CommonModule, FormsModule],
+  imports: [RouterOutlet, JsonPipe, CommonModule, FormsModule, HttpClientModule],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
@@ -34,21 +54,22 @@ export class AppComponent implements OnInit, OnDestroy {
   selectedFileName = '';
   isDragOver = false;
 
-  // Document management properties
-  documents: Document[] = [];
-  filteredDocuments: Document[] = [];
+  documents: DocumentWithVersions[] = [];
+  filteredDocuments: DocumentWithVersions[] = [];
   isLoadingDocuments = false;
   searchQuery = '';
   currentView: 'home' | 'documents' = 'home';
+  selectedDocument?: DocumentWithVersions;
+  selectedVersion?: DocumentVersion;
+  showVersionHistory = false;
 
-  // Polling helpers for summary generation
+  //Polling helpers for summary generation
   private summaryPollers: Record<number, number> = {}; // docId -> intervalId
   private readonly pollIntervalMs = 3000;
   private readonly maxPollAttempts = 30; // ~90s max
-  // Debounce timer for search input
+  //Debounce timer for search input
   private searchDebounceTimer?: number;
 
-  // Increase max upload size to 10 MB
   private readonly maxUploadBytes = 10 * 1024 * 1024; // 10 MB
 
   ngOnInit(): void {
@@ -71,8 +92,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   testApi(): void {
     this.http.get('/api/documents').subscribe({
-      next: (res) => this.result = res,
-      error: (err) => this.result = err?.message ?? err
+      next: (res: unknown) => this.result = res,
+      error: (err: any) => this.result = err?.message ?? err
     });
   }
 
@@ -82,48 +103,16 @@ export class AppComponent implements OnInit, OnDestroy {
 
   addDocument(): void {
     console.log('Add document clicked');
-    // Trigger file input click
+    //Trigger file input click
     const fileInput = document.getElementById('fileInput') as HTMLInputElement;
     if (fileInput) {
       fileInput.click();
     }
   }
 
-  // Spoof helper for testing UI without calling the backend
-  addFakeDocument(): void {
-    // Create minimal JSON payload (no Id - server will generate it)
-    const payload = {
-      fileName: `FakeDocument_${Date.now()}.pdf`,
-      content: 'This is a fake document used for UI testing. It contains sample text to exercise search and listing features.',
-      createdAt: new Date().toISOString()
-    } as Partial<Document>;
-
-    this.isUploading = true;
-    this.uploadStatus = 'Posting fake document...';
-
-  // Use the legacy JSON create endpoint so the server will persist the record
-  this.http.post<Document>('/api/documents/create', payload).subscribe({
-      next: (createdRaw) => {
-        const created = this.normalizeDocument(createdRaw);
-        // Insert server-returned document at front
-        this.documents = [created, ...this.documents];
-        this.filteredDocuments = [created, ...this.filteredDocuments];
-        this.currentView = 'documents';
-        this.uploadStatus = `Added document: ${created.fileName}`;
-        this.isUploading = false;
-        setTimeout(() => this.uploadStatus = '', 3000);
-
-        // start polling for summary if needed
-        if (created?.id && !created.summary) {
-          this.startPollingForSummary(created.id);
-        }
-      },
-      error: (err) => {
-        this.isUploading = false;
-        this.uploadStatus = `Failed to add fake document: ${err?.message ?? err}`;
-        setTimeout(() => this.uploadStatus = '', 4000);
-      }
-    });
+  viewSettings(): void {
+     console.log('Settings clicked');
+     // TODO: Implement settings view
   }
 
   onFileSelected(event: Event): void {
@@ -133,7 +122,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
       if (file.size > this.maxUploadBytes) {
         this.uploadStatus = 'File too large. Maximum allowed size is 10 MB.';
-        // clear input so user can pick another file
+        //clear input so user can pick another file
         input.value = '';
         setTimeout(() => (this.uploadStatus = ''), 5000);
         return;
@@ -149,7 +138,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
     const formData = new FormData();
     formData.append('file', file);
-    // The API expects just the file, based on the response structure
 
     this.http.post('/api/documents', formData).subscribe({
       next: (response: any) => {
@@ -158,11 +146,11 @@ export class AppComponent implements OnInit, OnDestroy {
         this.selectedFileName = '';
         console.log('Upload response:', response);
 
-        // If server returned the created document, normalize and insert/update
+        //If server returned the created document, normalize and insert/update
         const created = this.normalizeDocument(response);
         const createdId = created?.id ?? response?.id ?? response?.Id;
         if (created && createdId) {
-          // add to lists if not present, or merge if present
+          //add to lists if not present, or merge if present
           const upsert = (arr: Document[]) => {
             const idx = arr.findIndex(d => d.id === createdId);
             if (idx === -1) arr.unshift(created);
@@ -175,22 +163,22 @@ export class AppComponent implements OnInit, OnDestroy {
             this.startPollingForSummary(createdId);
           }
         } else {
-          // fallback: reload list
+          //fallback: reload list
           this.loadDocuments();
         }
 
-        // Clear status after 3 seconds
+        //Clear status after 3 seconds
         setTimeout(() => {
           this.uploadStatus = '';
         }, 3000);
       },
-      error: (error) => {
+      error: (error: any) => {
         this.isUploading = false;
         this.uploadStatus = `Upload failed: ${error.error?.message || error.message || 'Unknown error'}`;
         this.selectedFileName = '';
         console.error('Upload error:', error);
         
-        // Clear status after 5 seconds
+        //Clear status after 5 seconds
         setTimeout(() => {
           this.uploadStatus = '';
         }, 5000);
@@ -208,9 +196,37 @@ export class AppComponent implements OnInit, OnDestroy {
     this.performRemoteSearch(q);
   }
 
-  viewSettings(): void {
-    console.log('Settings clicked');
-    // TODO: Implement settings view
+  showAllDocuments(): void {
+    this.searchQuery = '';
+    this.filteredDocuments = [...this.documents];
+    this.currentView = 'documents';
+  }
+
+  showHome(): void {
+    this.currentView = 'home';
+    this.selectedDocument = undefined;
+  }
+
+  downloadDocument(doc: Document): void {
+    if (!doc?.id) return;
+    const url = `/api/documents/${doc.id}/download`;
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob: Blob) => {
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = doc.fileName || 'document.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(objectUrl);
+      },
+      error: (error: any) => {
+        console.error('Download failed:', error);
+        this.uploadStatus = `Download failed: ${error.error?.message || error.message || 'Unknown error'}`;
+        setTimeout(() => this.uploadStatus = '', 4000);
+      }
+    });
   }
 
   onDragOver(event: DragEvent): void {
@@ -247,18 +263,18 @@ export class AppComponent implements OnInit, OnDestroy {
   loadDocuments(): void {
     this.isLoadingDocuments = true;
     this.http.get<Document[]>('/api/documents').subscribe({
-      next: (documentsRaw) => {
-        // normalize incoming docs so summary mapping is consistent
+      next: (documentsRaw: any) => {
+        //normalize incoming docs so summary mapping is consistent
         const docs = (documentsRaw || []).map((d: any) => this.normalizeDocument(d));
         this.documents = docs;
         this.filteredDocuments = [...this.documents];
         this.isLoadingDocuments = false;
         console.log('Loaded documents:', docs);
 
-        // Start polling for any documents that don't have a summary yet
+        //Start polling for any documents that don't have a summary yet
         this.startPollingMissingSummaries();
       },
-      error: (error) => {
+      error: (error: any) => {
         this.isLoadingDocuments = false;
         console.error('Error loading documents:', error);
         this.documents = [];
@@ -276,27 +292,21 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private startPollingForSummary(docId: number): void {
-    if (this.summaryPollers[docId]) return; // already polling
+    if (this.summaryPollers[docId]) return;
 
     let attempts = 0;
     const intervalId = window.setInterval(() => {
       attempts++;
-
-      // add cache-buster to avoid stale/proxy responses
       const url = `/api/documents/${docId}?_=${Date.now()}`;
-
       this.http.get<any>(url).subscribe({
-        next: (updatedRaw) => {
+        next: (updatedRaw: any) => {
           const updated = this.normalizeDocument(updatedRaw);
           if (!updated) return;
 
-          // Merge update into existing document entries. Update the object so bindings update.
           const mergeInto = (arr: Document[]) => {
-            const idx = arr.findIndex(d => d.id === docId);
+            const idx = arr.findIndex((d) => d.id === docId);
             if (idx >= 0) {
-              // preserve same object reference where possible (helps bindings), then merge
-              const existing = arr[idx];
-              const merged = { ...existing, ...updated };
+              const merged = { ...arr[idx], ...updated };
               arr[idx] = merged;
             }
           };
@@ -304,46 +314,39 @@ export class AppComponent implements OnInit, OnDestroy {
           mergeInto(this.documents);
           mergeInto(this.filteredDocuments);
 
-          // Replace array references so ngFor picks up changes under all change-detection strategies
-          this.documents = [...this.documents];
-          this.filteredDocuments = [...this.filteredDocuments];
-
-          // Re-apply current search/filter so updated fields (like summary) appear
-          try {
-            this.performSearch();
-          } catch {
-            // ignore if performSearch not available in some test contexts
+          //also update selected if it is this doc
+          if (this.selectedDocument?.id === docId) {
+            this.selectedDocument = {
+              ...this.selectedDocument,
+              ...updated,
+            };
           }
 
-          // ensure Angular runs change detection immediately
-          try { this.cdr.detectChanges(); } catch { /* ignore in SSR/test env */ }
+          this.documents = [...this.documents];
+          this.filteredDocuments = [...this.filteredDocuments];
+          try { this.cdr.detectChanges(); } catch {}
 
           if (updated?.summary) {
-            console.log(`Summary arrived for doc ${docId}`);
-            // stop polling once summary arrives
             clearInterval(this.summaryPollers[docId]);
             delete this.summaryPollers[docId];
           }
-         },
-         error: (err) => {
-           console.error(`Error polling document ${docId} for summary:`, err);
-         }
-       });
+        },
+        error: (err: any) => console.error(`Error polling document ${docId} for summary:`, err),
+      });
 
-       if (attempts >= this.maxPollAttempts) {
-         clearInterval(this.summaryPollers[docId]);
-         delete this.summaryPollers[docId];
-       }
-     }, this.pollIntervalMs);
+      if (attempts >= this.maxPollAttempts) {
+        clearInterval(this.summaryPollers[docId]);
+        delete this.summaryPollers[docId];
+      }
+    }, this.pollIntervalMs);
 
-     this.summaryPollers[docId] = intervalId;
-   }
+    this.summaryPollers[docId] = intervalId;
+  }
 
   onSearchInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchQuery = input.value;
 
-    // debounce remote search: wait 500ms after the user's last keystroke
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer);
     }
@@ -364,7 +367,6 @@ export class AppComponent implements OnInit, OnDestroy {
       this.filteredDocuments = [...this.documents];
       return;
     }
-    // keep local fallback behaviour when explicitly invoked
     const query = this.searchQuery.toLowerCase();
     this.filteredDocuments = this.documents.filter(doc => 
       doc.fileName.toLowerCase().includes(query) ||
@@ -372,19 +374,12 @@ export class AppComponent implements OnInit, OnDestroy {
     );
   }
 
-  /**
-   * Call the server-side search endpoint and restrict displayed documents
-   * to the ids returned by the backend. The server returns objects like
-   * [{ documentId: 11, summary: "..." }, ...]
-   */
   performRemoteSearch(query: string): void {
     this.isLoadingDocuments = true;
     const url = `/api/documents/search?query=${encodeURIComponent(query)}`;
     this.http.get<Array<{ documentId: number; summary?: string }>>(url).subscribe({
-      next: (results) => {
+      next: (results: Array<{ documentId: number; summary?: string }>) => {
         const ids = (results || []).map(r => Number(r.documentId)).filter(Boolean);
-
-        // merge summaries into existing documents (if present)
         for (const r of results || []) {
           const id = Number(r.documentId);
           const existing = this.documents.find(d => d.id === id);
@@ -392,68 +387,36 @@ export class AppComponent implements OnInit, OnDestroy {
             existing.summary = r.summary ?? existing.summary;
           }
         }
-
-        // find ids that we don't have locally and fetch them
         const missing = ids.filter(id => !this.documents.some(d => d.id === id));
         if (missing.length === 0) {
-          // simply filter local docs
           this.filteredDocuments = this.documents.filter(d => ids.includes(d.id));
           this.isLoadingDocuments = false;
           return;
         }
-
-        // fetch missing documents in parallel
         const fetches = missing.map(id => this.http.get<any>(`/api/documents/${id}`).toPromise());
         Promise.all(fetches).then(fetched => {
           for (const raw of fetched) {
             const norm = this.normalizeDocument(raw);
-            // attach summary from search results if present
             const searchHit = (results || []).find(r => Number(r.documentId) === norm.id);
             if (searchHit && searchHit.summary) norm.summary = searchHit.summary;
-            // add to lists
             this.documents.push(norm);
           }
-
-          // now filter
           this.filteredDocuments = this.documents.filter(d => ids.includes(d.id));
-          // ensure arrays are replaced so bindings update
           this.documents = [...this.documents];
           this.filteredDocuments = [...this.filteredDocuments];
           this.isLoadingDocuments = false;
         }).catch(err => {
           console.error('Error fetching missing documents:', err);
-          // still show what we can
           this.filteredDocuments = this.documents.filter(d => ids.includes(d.id));
           this.isLoadingDocuments = false;
         });
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Remote search error:', err);
-        // fallback to local search when server search fails
         this.performSearch();
         this.isLoadingDocuments = false;
       }
     });
-  }
-
-  showAllDocuments(): void {
-    this.currentView = 'documents';
-    this.searchQuery = '';
-    this.filteredDocuments = [...this.documents];
-  }
-
-  showHome(): void {
-    this.currentView = 'home';
-  }
-
-  downloadDocument(doc: Document): void {
-    if (doc.id) {
-      // Create download link
-      const link = document.createElement('a');
-      link.href = `/api/documents/${doc.id}/download`;
-      link.download = doc.fileName;
-      link.click();
-    }
   }
 
   deleteDocument(doc: Document): void {
@@ -461,19 +424,19 @@ export class AppComponent implements OnInit, OnDestroy {
       this.http.delete(`/api/documents/${doc.id}`, { 
         responseType: 'text' 
       }).subscribe({
-        next: (response) => {
-          this.loadDocuments(); // Reload the list
-          this.uploadStatus = response || 'Document deleted successfully!';
-          setTimeout(() => {
-            this.uploadStatus = '';
-          }, 3000);
-        },
-        error: (error) => {
-          this.uploadStatus = `Delete failed: ${error.error?.message || error.message || 'Unknown error'}`;
-          setTimeout(() => {
-            this.uploadStatus = '';
-          }, 5000);
-        }
+        next: (response: string) => {
+           this.loadDocuments();
+           this.uploadStatus = response || 'Document deleted successfully!';
+           setTimeout(() => {
+             this.uploadStatus = '';
+           }, 3000);
+         },
+        error: (error: any) => {
+           this.uploadStatus = `Delete failed: ${error.error?.message || error.message || 'Unknown error'}`;
+           setTimeout(() => {
+             this.uploadStatus = '';
+           }, 5000);
+         }
       });
     }
   }
@@ -482,41 +445,29 @@ export class AppComponent implements OnInit, OnDestroy {
     return new Date(dateString).toLocaleDateString();
   }
 
-  /**
-   * Convert markdown-like bold markers **text** into safe HTML with <strong> tags.
-   * Returns sanitized SafeHtml for binding with [innerHTML].
-   */
   formatMarkdown(text?: string): SafeHtml {
     if (!text) return '' as unknown as SafeHtml;
 
-    // Escape basic HTML to avoid injection, then replace **bold** markers.
     const escaped = String(text)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
-    // Replace **bold** occurrences with <strong> tags (non-greedy)
     const html = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
-  // helper: normalize server payloads (handles PascalCase or different field names)
+  //helper: normalize server payloads (handles PascalCase or different field names)
   private normalizeDocument(serverDoc: any): Document {
-     if (!serverDoc) return serverDoc;
-     const id = serverDoc.id ?? serverDoc.Id ?? serverDoc.documentId ?? serverDoc.DocumentId ?? serverDoc.DocumentId;
-     const fileName = serverDoc.fileName ?? serverDoc.FileName ?? serverDoc.file_name ?? serverDoc.Name;
-     const content = serverDoc.content ?? serverDoc.Content ?? serverDoc.ContentText ?? serverDoc.FullText;
-     const createdAt = serverDoc.createdAt ?? serverDoc.CreatedAt ?? serverDoc.created_at ?? new Date().toISOString();
-     const summary =
-       serverDoc.summary ??
-       serverDoc.Summary ??
-       serverDoc.summarizedContent ??
-       serverDoc.SummarizedContent ??
-       serverDoc.SummarizedContentText;
-    
-    // Tag mapping (server returns numeric tag, e.g. "tag": 4)
-    const rawTag = serverDoc.tag ?? serverDoc.Tag ?? serverDoc.TagId ?? 0;
+    if (!serverDoc) return serverDoc;
+
+    //extract current version if present
+    const current: DocumentVersion | undefined = serverDoc.current ?? serverDoc.Current;
+    const currentAny = current as any;
+
+    //tag mapping
+    const rawTag = serverDoc.tag ?? serverDoc.Tag ?? currentAny?.tag ?? currentAny?.Tag ?? 0;
     const tagNum = Number(rawTag) || 0;
     const tagMap: Record<number, { name: string; cls: string }> = {
       0: { name: 'Default', cls: 'tag-default' },
@@ -530,16 +481,237 @@ export class AppComponent implements OnInit, OnDestroy {
       8: { name: 'Other', cls: 'tag-other' },
     };
     const tagInfo = tagMap[tagNum] ?? tagMap[0];
- 
-     return {
-       id: Number(id),
-       fileName: fileName ?? `Document_${id}`,
-       content: content ?? '',
-       createdAt: createdAt,
-       summary: summary ?? undefined,
-       tag: tagNum,
-       tagName: tagInfo.name,
-       tagClass: tagInfo.cls
-     } as Document;
+
+    const summary =
+      serverDoc.summary ??
+      serverDoc.Summary ??
+      serverDoc.summarizedContent ??
+      serverDoc.SummarizedContent ??
+      currentAny?.summarizedContent ??
+      currentAny?.SummarizedContent;
+
+    const changeSummary =
+      serverDoc.changeSummary ??
+      serverDoc.ChangeSummary ??
+      currentAny?.changeSummary ??
+      currentAny?.ChangeSummary;
+
+    const versionNumber =
+      serverDoc.versionNumber ??
+      serverDoc.VersionNumber ??
+      currentAny?.versionNumber ??
+      currentAny?.VersionNumber;
+
+    const sizeBytes =
+      serverDoc.sizeBytes ??
+      serverDoc.SizeBytes ??
+      currentAny?.sizeBytes ??
+      currentAny?.SizeBytes;
+
+    const id =
+      serverDoc.id ??
+      serverDoc.Id ??
+      serverDoc.documentId ??
+      serverDoc.DocumentId;
+
+    const fileName =
+      serverDoc.fileName ??
+      serverDoc.FileName ??
+      serverDoc.file_name ??
+      serverDoc.Name;
+
+    const content =
+      serverDoc.content ??
+      serverDoc.Content ??
+      serverDoc.ContentText ??
+      '';
+
+    const createdAt =
+      serverDoc.createdAt ??
+      serverDoc.CreatedAt ??
+      serverDoc.created_at ??
+      new Date().toISOString();
+
+    return {
+      id: Number(id),
+      fileName: fileName ?? `Document_${id}`,
+      content,
+      createdAt,
+      summary: summary ?? undefined,
+      tag: tagNum,
+      tagName: tagInfo.name,
+      tagClass: tagInfo.cls,
+      currentVersionId: serverDoc.currentVersionId ?? serverDoc.CurrentVersionId,
+      versionNumber: versionNumber ? Number(versionNumber) : undefined,
+      sizeBytes: sizeBytes ? Number(sizeBytes) : undefined,
+      changeSummary: changeSummary ?? undefined,
+    };
+  }
+
+  selectDocument(doc: DocumentWithVersions): void {
+    this.selectedDocument = doc;
+    this.showVersionHistory = false;
+    this.selectedVersion = undefined;
+    
+    // Load versions if not already loaded
+    if (!doc.allVersionsLoaded) {
+      this.loadDocumentVersions(doc.id);
     }
- }
+  }
+
+  loadDocumentVersions(docId: number): void {
+    const url = `/api/documents/${docId}/versions`;
+    console.log('Loading versions from:', url);
+    
+    this.http.get<any>(url).subscribe({
+      next: (response: any) => {
+        console.log('Versions loaded:', response);
+        const versions = response.Versions || response.versions || response || [];
+        
+        const updateDoc = (arr: DocumentWithVersions[]) => {
+          const idx = arr.findIndex(d => d.id === docId);
+          if (idx >= 0) {
+            arr[idx] = {
+              ...arr[idx],
+              versions: Array.isArray(versions) ? versions : [],
+              allVersionsLoaded: true,
+              currentVersionId: response.CurrentVersionId || response.currentVersionId || response.id
+            };
+          }
+        };
+        
+        updateDoc(this.documents);
+        updateDoc(this.filteredDocuments);
+        
+        if (this.selectedDocument?.id === docId) {
+          this.selectedDocument = {
+            ...this.selectedDocument,
+            versions: Array.isArray(versions) ? versions : [],
+            allVersionsLoaded: true,
+            currentVersionId: response.CurrentVersionId || response.currentVersionId || response.id
+          };
+        }
+        
+        this.documents = [...this.documents];
+        this.filteredDocuments = [...this.filteredDocuments];
+        try { this.cdr.detectChanges(); } catch {}
+      },
+      error: (err: any) => {
+        console.error('Failed to load versions from', url, ':', err);
+        console.error('Full error:', JSON.stringify(err, null, 2));
+        
+        //Mark as loaded but empty to prevent infinite retries
+        const updateDoc = (arr: DocumentWithVersions[]) => {
+          const idx = arr.findIndex(d => d.id === docId);
+          if (idx >= 0) {
+            arr[idx] = {
+              ...arr[idx],
+              versions: [],
+              allVersionsLoaded: true
+            };
+          }
+        };
+        updateDoc(this.documents);
+        updateDoc(this.filteredDocuments);
+        
+        this.uploadStatus = `Versions endpoint not available: ${err.status} ${err.statusText}`;
+        setTimeout(() => this.uploadStatus = '', 5000);
+      }
+    });
+  }
+
+  toggleVersionHistory(): void {
+    this.showVersionHistory = !this.showVersionHistory;
+    if (this.showVersionHistory && this.selectedDocument && !this.selectedDocument.allVersionsLoaded) {
+      this.loadDocumentVersions(this.selectedDocument.id);
+    }
+  }
+
+  selectVersion(version: DocumentVersion): void {
+    this.selectedVersion = version;
+  }
+
+  setCurrentVersion(docId: number, versionId: number): void {
+    this.http.put(`/api/documents/${docId}/currentVersion/${versionId}`, {}).subscribe({
+      next: () => {
+        // Update local state
+        const updateDoc = (arr: DocumentWithVersions[]) => {
+          const idx = arr.findIndex(d => d.id === docId);
+          if (idx >= 0) {
+            arr[idx] = { ...arr[idx], currentVersionId: versionId };
+          }
+        };
+        
+        updateDoc(this.documents);
+        updateDoc(this.filteredDocuments);
+        
+        if (this.selectedDocument?.id === docId) {
+          this.selectedDocument = {
+            ...this.selectedDocument,
+            currentVersionId: versionId
+          };
+        }
+        
+        this.documents = [...this.documents];
+        this.filteredDocuments = [...this.filteredDocuments];
+        
+        this.uploadStatus = 'Current version updated successfully!';
+        setTimeout(() => this.uploadStatus = '', 3000);
+        
+        // Reload document to get updated details
+        this.loadDocuments();
+      },
+      error: (err: any) => {
+        console.error('Failed to set current version:', err);
+        this.uploadStatus = `Failed to update version: ${err.error?.message || err.message || 'Unknown error'}`;
+        setTimeout(() => this.uploadStatus = '', 4000);
+      }
+    });
+  }
+
+  downloadVersion(versionId: number, versionNumber?: number): void {
+    const url = `/api/documents/versions/${versionId}/file`;
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob: Blob) => {
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = `${this.selectedDocument?.fileName || 'document'}_v${versionNumber || versionId}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(objectUrl);
+      },
+      error: (error: any) => {
+        console.error('Download failed:', error);
+        this.uploadStatus = `Download failed: ${error.error?.message || error.message || 'Unknown error'}`;
+        setTimeout(() => this.uploadStatus = '', 4000);
+      }
+    });
+  }
+
+  getVersionOcr(versionId: number): void {
+    this.http.get<any>(`/api/documents/versions/${versionId}/ocr`).subscribe({
+      next: (response: any) => {
+        console.log('OCR Text:', response.OcrText || response.ocrText);
+        alert(`OCR Text:\n\n${response.OcrText || response.ocrText}`);
+      },
+      error: (err: any) => {
+        console.error('Failed to load OCR:', err);
+      }
+    });
+  }
+
+  formatVersionDate(version: DocumentVersion): string {
+    return `Version ${version.versionNumber || version.id}`;
+  }
+
+  formatBytes(bytes?: number): string {
+    if (!bytes) return '0 KB';
+    const kb = bytes / 1024;
+    if (kb < 1024) return `${kb.toFixed(1)} KB`;
+    const mb = kb / 1024;
+    return `${mb.toFixed(1)} MB`;
+  }
+
+}
