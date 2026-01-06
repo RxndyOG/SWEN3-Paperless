@@ -20,7 +20,7 @@ using Paperless.Contracts;
 public class CapturingSink : IOcrResultSink
 {
     public readonly TaskCompletionSource<(int id, string text)> Tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    public Task OnOcrCompletedAsync(int documentId, string text, CancellationToken ct)
+    public Task OnOcrCompletedAsync(int documentId, int documentVersionId, int? diffBaseVersionId, string text, CancellationToken ct)
     {
         Tcs.TrySetResult((documentId, text));
         return Task.CompletedTask;
@@ -110,8 +110,11 @@ public class OcrTests : IClassFixture<OcrFixture>
 
         var worker = new OcrConsumerService(logger, opts, minio.Object, fetcher.Object, ocr, sink);
 
-        var payload = new UploadedDocMessage(
+        var payload = new VersionPipelineMessage(
             DocumentId: 77,
+            DocumentVersionId: 1,
+            VersionNumber: 1,
+            DiffBaseVersionId: 2,
             Bucket: "bucket",
             ObjectKey: "key",
             FileName: "file.png",

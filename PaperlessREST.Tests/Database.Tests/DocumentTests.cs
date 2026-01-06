@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PaperlessREST.Controllers;
@@ -9,16 +10,15 @@ using Microsoft.Extensions.Logging;
 using PaperlessREST.Services;
 using Moq;
 using Paperless.Contracts.SharedServices;
+using Paperless.REST.Models;
 
 public class DocumentRepositoryTests : IClassFixture<PostgresFixture>
 {
     private readonly PostgresFixture _fixture;
-    private readonly IElasticService _elasticService;
 
-    public DocumentRepositoryTests(PostgresFixture fixture, IElasticService elasticService)
+    public DocumentRepositoryTests(PostgresFixture fixture)
     {
         _fixture = fixture;
-        _elasticService = new Mock<IElasticService>().Object;
     }
 
     [Fact]
@@ -34,21 +34,37 @@ public class DocumentRepositoryTests : IClassFixture<PostgresFixture>
             var doc = new Document
             {
                 FileName = "test.pdf",
-                Content = "Hello World",
                 CreatedAt = DateTime.UtcNow
             };
 
-            // Act
+            // add a version (the Document no longer has Content directly)
+            doc.Versions = new List<DocumentVersion>
+            {
+                new DocumentVersion
+                {
+                    VersionNumber = 1,
+                    ContentType = "application/pdf",
+                    SizeBytes = 0,
+                    SummarizedContent = "Hello World"
+                }
+            };
+
             db.Documents.Add(doc);
+            await db.SaveChangesAsync();
+
+            // set current version to the newly created version
+            doc.CurrentVersionId = doc.Versions.First().Id;
             await db.SaveChangesAsync();
         }
 
         // Assert
         using (var db = new AppDbContext(options))
         {
-            var docs = await db.Documents.ToListAsync();
+            var docs = await db.Documents.Include(d => d.Versions).ToListAsync();
             Assert.Single(docs);
             Assert.Equal("test.pdf", docs[0].FileName);
+            Assert.NotEmpty(docs[0].Versions);
+            Assert.Equal("Hello World", docs[0].Versions.First().SummarizedContent);
         }
     }
 }
@@ -72,14 +88,40 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
             CleanDocuments(db);
 
             var docs = new List<Document>
-        {
-            new Document { FileName = "test1", Content = "dummyContent", CreatedAt = DateTime.UtcNow },
-            new Document { FileName = "this should be returned", Content = "this is the content", CreatedAt = DateTime.UtcNow },
-            new Document { FileName = "blah", Content = "blah", CreatedAt = DateTime.UtcNow }
-        };
+            {
+                new Document {
+                    FileName = "test1",
+                    Versions = new List<DocumentVersion> {
+                        new DocumentVersion { VersionNumber = 1, SummarizedContent = "dummyContent", ContentType = "application/pdf", SizeBytes = 0 }
+                    },
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Document {
+                    FileName = "this should be returned",
+                    Versions = new List<DocumentVersion> {
+                        new DocumentVersion { VersionNumber = 1, SummarizedContent = "this is the content", ContentType = "application/pdf", SizeBytes = 0 }
+                    },
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Document {
+                    FileName = "blah",
+                    Versions = new List<DocumentVersion> {
+                        new DocumentVersion { VersionNumber = 1, SummarizedContent = "blah", ContentType = "application/pdf", SizeBytes = 0 }
+                    },
+                    CreatedAt = DateTime.UtcNow
+                }
+            };
 
             db.Documents.AddRange(docs);
             await db.SaveChangesAsync();
+
+            // set current version ids now that versions have ids
+            foreach (var d in docs)
+            {
+                d.CurrentVersionId = d.Versions.First().Id;
+            }
+            await db.SaveChangesAsync();
+
             id = docs[1].Id;
         }
 
@@ -92,7 +134,7 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
             var logger = new LoggerFactory().CreateLogger<DocumentsController>();
 
             var storageMock = new Mock<IObjectStorage>();
-            // Force the controller into the fallback branch that returns the Document directly:
+            // Force any code path that may attempt presign to fail (controller won't fail here but keep as test intent)
             storageMock
                 .Setup(s => s.GetPresignedGetUrl(It.IsAny<string>(), It.IsAny<TimeSpan>()))
                 .Throws(new Exception("presign fail"));
@@ -106,64 +148,74 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
         }
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        var document = Assert.IsType<Document>(ok.Value);
-        Assert.Equal("this should be returned", document.FileName);
-        Assert.Equal("this is the content", document.Content);
-        Assert.Equal(id, document.Id);
+        // serialize the anonymous result to JSON and assert on returned shape
+        var json = JsonSerializer.Serialize(ok.Value);
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        Assert.Equal("this should be returned", root.GetProperty("FileName").GetString());
+
+        var versions = root.GetProperty("Versions").EnumerateArray();
+        var firstVersion = versions.First();
+        Assert.Equal("this is the content", firstVersion.GetProperty("SummarizedContent").GetString());
+        Assert.Equal(id, root.GetProperty("Id").GetInt32());
     }
 
 
     [Fact]
     public async Task InsertDocumentThenDeleteShouldReturnOk()
     {
-        //Arrange
-        int id;
-        using (var db = NewDb())
-        {
-            CleanDocuments(db);
-            var docs = new List<Document>
-            { new Document { FileName = "test1", Content = "dummyContent", CreatedAt = DateTime.UtcNow },
-            new Document { FileName = "this should be deleted", Content = "this is the content", CreatedAt= DateTime.UtcNow },
-            new Document { FileName = "blah", Content = "blah", CreatedAt = DateTime.UtcNow}
-            };
-            foreach (var doc in docs)
-            {
-                db.Documents.Add(doc);
-            }
-            await db.SaveChangesAsync();
-            id = docs[1].Id;
-        }
-
-        // Act
-        IActionResult deleteResult;
-        List<Document> documentList;
         var elasticMock = new Mock<IElasticService>();
 
-        using (var db = NewDb())
-        {
-            var logger = new LoggerFactory().CreateLogger<DocumentsController>();
-            var storage = new Mock<IObjectStorage>().Object;
-            var mq = new Mock<RestQueueService>().Object;
-            var controller = new DocumentsController(db, logger, storage, mq, elasticMock.Object);
+        using var db = NewDb();
+        CleanDocuments(db);
 
-            // Call DELETE
-            deleteResult = await controller.DeleteDocById(id);
+        var docs = new List<Document>
+    {
+        new Document { FileName = "test1", Versions = new() { new DocumentVersion { VersionNumber = 1, SummarizedContent = "dummyContent", ContentType="application/pdf", SizeBytes=0 } }, CreatedAt = DateTime.UtcNow },
+        new Document { FileName = "this should be deleted", Versions = new() { new DocumentVersion { VersionNumber = 1, SummarizedContent = "this is the content", ContentType="application/pdf", SizeBytes=0 } }, CreatedAt = DateTime.UtcNow },
+        new Document { FileName = "blah", Versions = new() { new DocumentVersion { VersionNumber = 1, SummarizedContent = "blah", ContentType="application/pdf", SizeBytes=0 } }, CreatedAt = DateTime.UtcNow }
+    };
 
-            // Call GET ALL
-            var getAllResult = await controller.GetAll();
+        db.Documents.AddRange(docs);
+        await db.SaveChangesAsync();
 
-            // unwrap OkObjectResult and get the list
-            var okObject = Assert.IsType<OkObjectResult>(getAllResult);
-            documentList = Assert.IsAssignableFrom<List<Document>>(okObject.Value);
-        }
+        foreach (var d in docs)
+            d.CurrentVersionId = d.Versions.First().Id;
 
-        // Assert
+        await db.SaveChangesAsync();
+
+        var id = docs[1].Id;
+
+        var logger = new LoggerFactory().CreateLogger<DocumentsController>();
+
+        var storageMock = new Mock<IObjectStorage>();
+        storageMock
+            .Setup(s => s.RemoveObjectAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var mq = new Mock<RestQueueService>().Object;
+        var controller = new DocumentsController(db, logger, storageMock.Object, mq, elasticMock.Object);
+
+        // Act
+        var deleteResult = await controller.DeleteDocById(id);
+        var getAllResult = await controller.GetAll();
+
+        // Assert delete
         Assert.IsType<OkObjectResult>(deleteResult);
-        Assert.Equal(2, documentList.Count);
-        Assert.DoesNotContain(documentList, d => d.Id == id);
+
+        // Assert list
+        var okObject = Assert.IsType<OkObjectResult>(getAllResult);
+        var json = JsonSerializer.Serialize(okObject.Value);
+        using var jdoc = JsonDocument.Parse(json);
+        var rootArray = jdoc.RootElement;
+
+        Assert.Equal(2, rootArray.GetArrayLength());
+        Assert.DoesNotContain(rootArray.EnumerateArray(), e => e.GetProperty("Id").GetInt32() == id);
     }
 
-    
+
+
     static void CleanDocuments(AppDbContext db)
     {
         // Ensure schema exists (and migrations are applied) before truncating
@@ -173,7 +225,8 @@ public class DocumentsController_Update_Tests : IClassFixture<PostgresFixture>
         var schema = et.GetSchema() ?? "public";
         var table = et.GetTableName()!; // EF’s actual table name
 
-        // Quote identifiers to work with any casing
-        db.Database.ExecuteSqlRaw($@"TRUNCATE TABLE ""{schema}"".""{table}"" RESTART IDENTITY CASCADE");
+        // Build raw SQL for identifiers — do NOT use ExecuteSqlInterpolated which parameterizes identifiers
+        var sql = $@"TRUNCATE TABLE ""{schema}"".""{table}"" RESTART IDENTITY CASCADE";
+        db.Database.ExecuteSqlRaw(sql);
     }
 }

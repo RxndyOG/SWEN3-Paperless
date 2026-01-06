@@ -105,21 +105,21 @@ namespace PaperlessAI.Services
             var newC = Clip(newText, 12000);
 
             var prompt = $"""
-You are generating a concise change summary between two document versions.
+                        You are generating a concise change summary between two document versions.
 
-OLD VERSION TEXT:
-<<<{oldC}>>>
+                        OLD VERSION TEXT:
+                        <<<{oldC}>>>
 
-NEW VERSION TEXT:
-<<<{newC}>>>
+                        NEW VERSION TEXT:
+                        <<<{newC}>>>
 
-Rules:
-- Output 3–8 bullet points.
-- Focus on what changed (added/removed/modified).
-- If mostly OCR noise/formatting, say so.
-- Do not restate the whole document.
-Return only the bullet list.
-""";
+                        Rules:
+                        - Output 3–8 bullet points.
+                        - Focus on what changed (added/removed/modified).
+                        - If mostly OCR noise/formatting, say so.
+                        - Do not restate the whole document.
+                        Return only the bullet list.
+                        """;
 
             var response = await model.GenerateContentAsync(prompt, cancellationToken: ct);
             return response.Text ?? "";
@@ -149,22 +149,22 @@ Return only the bullet list.
                     throw new InvalidOperationException("Generative model could not be created.");
 
                 var prompt = $@"
-                Classify the following text into EXACTLY ONE of the following categories:
+                            Classify the following text into EXACTLY ONE of the following categories:
 
-                - Invoice
-                - Contract
-                - Personal
-                - Education
-                - Medical
-                - Finance
-                - Legal
-                - Other
+                            - Invoice
+                            - Contract
+                            - Personal
+                            - Education
+                            - Medical
+                            - Finance
+                            - Legal
+                            - Other
 
-                ANSWER WITH ONLY THE CATEGORY NAME. NOTHING ELSE.
+                            ANSWER WITH ONLY THE CATEGORY NAME. NOTHING ELSE.
 
-                Text:
-                {textToClassify}
-                ";
+                            Text:
+                            {textToClassify}
+                            ";
 
                 var response = await model.GenerateContentAsync(prompt, cancellationToken: ct);
 

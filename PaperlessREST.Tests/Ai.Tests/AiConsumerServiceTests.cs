@@ -8,12 +8,14 @@ using PaperlessAI.Abstractions;
 using PaperlessAI.Services;
 using Paperless.Contracts;
 using Xunit;
+using Paperless.AI.Abstractions;
 
 public class AiConsumerServiceTests
 {
     private AiConsumerService CreateService(
         Mock<IGenAiEngine> engineMock,
-        Mock<IGenAiResultSink> sinkMock)
+        Mock<IGenAiResultSink> sinkMock,
+        Mock<IVersionTextClient>? restClientMock = null)
     {
         var logger = Mock.Of<ILogger<AiConsumerService>>();
 
@@ -28,12 +30,15 @@ public class AiConsumerServiceTests
 
         var genOpts = Options.Create(new GenAiOptions { ApiKey = "dummy" });
 
+        restClientMock ??= new Mock<IVersionTextClient>();
+
         return new AiConsumerService(
             logger,
             rabbitOpts,
             genOpts,
             engineMock.Object,
-            sinkMock.Object);
+            sinkMock.Object,
+            restClientMock.Object);
     }
 
     [Fact]
@@ -42,10 +47,18 @@ public class AiConsumerServiceTests
         // Arrange
         var engineMock = new Mock<IGenAiEngine>();
         var sinkMock = new Mock<IGenAiResultSink>();
+        var restClientMock = new Mock<IVersionTextClient>();
 
         var inputText = "This is some OCR text";
         var summary = "Short summary";
         var classifiedTag = DocumentTag.Medical;
+        var changeSummary = "No significant changes";
+        var versionId = 7;
+
+        // If the service fetches OCR text via version client, return the same text
+        restClientMock
+            .Setup(r => r.GetVersionOcrTextAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(inputText);
 
         engineMock
             .Setup(e => e.SummarizeAsync(inputText, It.IsAny<CancellationToken>()))
@@ -55,15 +68,19 @@ public class AiConsumerServiceTests
             .Setup(e => e.ClassifyAsync(inputText, It.IsAny<CancellationToken>()))
             .ReturnsAsync(classifiedTag);
 
-        var sut = CreateService(engineMock, sinkMock);
+        engineMock
+            .Setup(e => e.ChangeSummaryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(changeSummary);
 
-        var message = new MessageTransferObject
-        {
-            DocumentId = 42,
-            OcrText = inputText,
-            Tag = DocumentTag.Default, // incoming tag is ignored/overwritten by classification
-            Summary = summary
-        };
+        var sut = CreateService(engineMock, sinkMock, restClientMock);
+
+        var message = new OcrCompletedMessage(
+            DocumentId: 42,
+            DocumentVersionId: versionId,
+            // Give a non-null base version so ChangeSummaryAsync is invoked
+            DiffBaseVersionId: 6,
+            OcrText: inputText
+        );
 
         // Act
         await sut.ProcessAsync(message, CancellationToken.None);
@@ -77,8 +94,20 @@ public class AiConsumerServiceTests
             e => e.ClassifyAsync(inputText, It.IsAny<CancellationToken>()),
             Times.Once);
 
+        engineMock.Verify(
+            e => e.ChangeSummaryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+
         sinkMock.Verify(
-            s => s.OnGeminiCompletedAsync(42, summary, classifiedTag, inputText, It.IsAny<CancellationToken>()),
+            s => s.OnGeminiCompletedAsync(
+                42,
+                versionId,
+                summary,
+                classifiedTag,
+                inputText,
+                changeSummary,
+                It.IsAny<CancellationToken>()
+            ),
             Times.Once);
     }
 
@@ -88,22 +117,20 @@ public class AiConsumerServiceTests
         // Arrange
         var engineMock = new Mock<IGenAiEngine>();
         var sinkMock = new Mock<IGenAiResultSink>();
+        var restClientMock = new Mock<IVersionTextClient>();
 
         engineMock
             .Setup(e => e.SummarizeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ApplicationException("AI summarize failed"));
 
-        // Classification should not be called if summarize already failed
-        var sut = CreateService(engineMock, sinkMock);
-        var summary = "Summary";
+        var sut = CreateService(engineMock, sinkMock, restClientMock);
 
-        var message = new MessageTransferObject
-        {
-            DocumentId = 99,
-            OcrText = "Something",
-            Tag = DocumentTag.Default,
-            Summary = summary
-        };
+        var message = new OcrCompletedMessage(
+            DocumentId: 99,
+            DocumentVersionId: 11,
+            DiffBaseVersionId: null,
+            OcrText: "Something"
+);
 
         // Act & Assert
         await Assert.ThrowsAsync<ApplicationException>(
@@ -114,7 +141,14 @@ public class AiConsumerServiceTests
             Times.Never);
 
         sinkMock.Verify(
-            s => s.OnGeminiCompletedAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<DocumentTag>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            s => s.OnGeminiCompletedAsync(
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<string>(),
+                It.IsAny<DocumentTag>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -124,9 +158,11 @@ public class AiConsumerServiceTests
         // Arrange
         var engineMock = new Mock<IGenAiEngine>();
         var sinkMock = new Mock<IGenAiResultSink>();
+        var restClientMock = new Mock<IVersionTextClient>();
 
         var inputText = "Some OCR text";
         var summary = "Summary works";
+        var versionId = 13;
 
         engineMock
             .Setup(e => e.SummarizeAsync(inputText, It.IsAny<CancellationToken>()))
@@ -136,15 +172,14 @@ public class AiConsumerServiceTests
             .Setup(e => e.ClassifyAsync(inputText, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ApplicationException("AI classify failed"));
 
-        var sut = CreateService(engineMock, sinkMock);
+        var sut = CreateService(engineMock, sinkMock, restClientMock);
 
-        var message = new MessageTransferObject
-        {
-            DocumentId = 7,
-            OcrText = inputText,
-            Tag = DocumentTag.Default,
-            Summary = summary,
-        };
+        var message = new OcrCompletedMessage(
+            DocumentId: 7,
+            DocumentVersionId: versionId,
+            DiffBaseVersionId: null,
+            OcrText: inputText
+);
 
         // Act & Assert
         await Assert.ThrowsAsync<ApplicationException>(
@@ -157,7 +192,14 @@ public class AiConsumerServiceTests
 
         // Sink was NOT called because classification failed
         sinkMock.Verify(
-            s => s.OnGeminiCompletedAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<DocumentTag>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            s => s.OnGeminiCompletedAsync(
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<string>(),
+                It.IsAny<DocumentTag>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 }
