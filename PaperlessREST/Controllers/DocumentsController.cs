@@ -179,7 +179,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
         return NoContent();
     }
 
-    //Accept only PDF files (enforced). Stores the file in MinIO and metadata in DB.
+    //Accept only PDF files. Stores the file in MinIO and metadata in DB.
     [HttpPost]
     [RequestSizeLimit(10 * 1024 * 1024)]
     public async Task<IActionResult> Upload([FromForm] IFormFile file)
@@ -200,7 +200,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
             _logger.LogInformation("Uploading PDF {ObjectKey} (name: {FileName}, size: {Size})", objectKey, file.FileName, file.Length);
 
             await using var stream = file.OpenReadStream();
-            // Ensure bucket exists and put object
+            //Ensure bucket exists and put object
             await _storage.PutObjectAsync(stream, objectKey, "application/pdf");
 
             await using var tx = await _db.Database.BeginTransactionAsync();
@@ -385,7 +385,6 @@ public class DocumentsController : ControllerBase, IDocumentsController
     {
         try
         {
-            //Load document + versions
             var doc = await _db.Documents
                 .Include(d => d.Versions)
                 .FirstOrDefaultAsync(d => d.Id == id);
@@ -418,7 +417,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
                         v.ObjectKey, id, v.Id);
                 }
             }
-            
+
             if (failedKeys.Count > 0)
             {
                 return StatusCode(StatusCodes.Status502BadGateway,
@@ -428,8 +427,11 @@ public class DocumentsController : ControllerBase, IDocumentsController
 
             await using var tx = await _db.Database.BeginTransactionAsync();
 
-            _db.DocumentVersions.RemoveRange(doc.Versions);
+            // ✅ break FK: Document -> CurrentVersion
+            doc.CurrentVersionId = null;
+            await _db.SaveChangesAsync();
 
+            _db.DocumentVersions.RemoveRange(doc.Versions);
             _db.Documents.Remove(doc);
 
             var changes = await _db.SaveChangesAsync();
@@ -455,6 +457,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
             return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error");
         }
     }
+
 
 
     [HttpGet("search")]
