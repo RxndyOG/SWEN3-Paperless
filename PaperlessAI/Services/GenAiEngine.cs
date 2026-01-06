@@ -70,6 +70,47 @@ namespace PaperlessAI.Services
             }
         }
 
+        public async Task<string> ChangeSummaryAsync(string oldText, string newText, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var apiKey = _genOptions.ApiKey;
+            if (string.IsNullOrWhiteSpace(apiKey))
+                throw new InvalidOperationException("API Key is not configured.");
+
+            var googleAi = new GoogleAi(apiKey);
+            var model = googleAi.CreateGenerativeModel("models/gemini-2.5-flash-lite");
+            if (model == null)
+                throw new InvalidOperationException("Generative model could not be created.");
+
+            static string Clip(string s, int max) =>
+                string.IsNullOrEmpty(s) ? "" :
+                s.Length <= max ? s :
+                s.Substring(0, max / 2) + "\n...\n" + s.Substring(s.Length - max / 2);
+
+            var oldC = Clip(oldText, 12000);
+            var newC = Clip(newText, 12000);
+
+            var prompt = $"""
+You are generating a concise change summary between two document versions.
+
+OLD VERSION TEXT:
+<<<{oldC}>>>
+
+NEW VERSION TEXT:
+<<<{newC}>>>
+
+Rules:
+- Output 3–8 bullet points.
+- Focus on what changed (added/removed/modified).
+- If mostly OCR noise/formatting, say so.
+- Do not restate the whole document.
+Return only the bullet list.
+""";
+
+            var response = await model.GenerateContentAsync(prompt, cancellationToken: ct);
+            return response.Text ?? "";
+        }
 
         public async Task<DocumentTag> ClassifyAsync(string textToClassify, CancellationToken ct)
         {

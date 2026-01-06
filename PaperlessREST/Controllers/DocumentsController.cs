@@ -8,6 +8,9 @@ using PaperlessREST.Services;
 using System.Text.Json;
 using Paperless.Contracts;
 using Paperless.Contracts.SharedServices;
+using System.Diagnostics;
+using Paperless.REST.Models;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace PaperlessREST.Controllers;
 
@@ -51,7 +54,30 @@ public class DocumentsController : ControllerBase, IDocumentsController
     {
         try
         {
-            var docs = await _db.Documents.AsNoTracking().OrderByDescending(d => d.CreatedAt).ToListAsync();
+            var docs = await _db.Documents
+                .AsNoTracking()
+                .Select(d => new
+                {
+                    d.Id,
+                    d.FileName,
+                    d.CreatedAt,
+                    d.CurrentVersionId,
+                    // return a single current-version projection (not an IQueryable/collection)
+                    Current = _db.DocumentVersions
+                        .Where(v => v.Id == d.CurrentVersionId)
+                        .Select(v => new
+                        {
+                            v.Id,
+                            v.VersionNumber,
+                            v.SizeBytes,
+                            v.Tag,
+                            v.ChangeSummary,
+                            v.SummarizedContent
+                        })
+                        .FirstOrDefault()
+                })
+                .OrderByDescending(d => d.CreatedAt)
+                .ToListAsync();
             return Ok(docs);
         }
         catch (Exception ex)
@@ -61,28 +87,34 @@ public class DocumentsController : ControllerBase, IDocumentsController
         }
     }
 
+    [HttpGet("versions/{versionId:int}/ocr")]
+    public async Task<IActionResult> GetVersionOcr(int versionId)
+    {
+        var v = await _db.DocumentVersions
+            .AsNoTracking()
+            .Where(x => x.Id == versionId)
+            .Select(x => new { x.Id, OcrText = x.Content }) // or x.OcrText if you renamed it
+            .FirstOrDefaultAsync();
+
+        if (v == null) return NotFound();
+        return Ok(v);
+    }
+
     //Accept only PDF files (enforced). Stores the file in MinIO and metadata in DB.
     [HttpPost]
     [RequestSizeLimit(10 * 1024 * 1024)]
     public async Task<IActionResult> Upload([FromForm] IFormFile file)
     {
-        if (file is null)
+        if (file is null || file.Length == 0)
             return BadRequest("File is required.");
 
-        if (file.Length == 0)
-            return BadRequest("File is empty.");
-
         //Enforce PDF only. Accept if content-type indicates PDF or filename ends with .pdf
-        var isPdfContentType = string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase);
-        var hasPdfExtension = file.FileName?.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) == true;
+        var isPdf = file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase)
+                        || file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
+        if (!isPdf) return BadRequest("Only PDF files are accepted.");
 
-        if (!isPdfContentType && !hasPdfExtension)
-        {
-            _logger.LogWarning("Rejected upload: non-PDF file {FileName} with content-type {ContentType}", file.FileName, file.ContentType);
-            return BadRequest("Only PDF files are accepted.");
-        }
-
-        var objectKey = $"{Guid.NewGuid():N}_{Path.GetFileName(file.FileName)}";
+        var fileName = Path.GetFileName(file.FileName);
+        var objectKey = $"{Guid.NewGuid():N}_{fileName}";
 
         try
         {
@@ -92,26 +124,55 @@ public class DocumentsController : ControllerBase, IDocumentsController
             // Ensure bucket exists and put object
             await _storage.PutObjectAsync(stream, objectKey, "application/pdf");
 
-            var doc = new Document
+            await using var tx = await _db.Database.BeginTransactionAsync();
+
+            var doc = await _db.Documents
+                .Include(d => d.Versions)
+                .FirstOrDefaultAsync(d => d.FileName == fileName);
+
+            if (doc == null)
             {
-                FileName = Path.GetFileName(file.FileName)!,
+                doc = new Document
+                {
+                    FileName = fileName,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _db.Documents.Add(doc);
+                await _db.SaveChangesAsync();
+            }
+
+            var nextVersionNumber = (doc.Versions.Count == 0)
+                ? 1
+                : doc.Versions.Max(v => v.VersionNumber) + 1;
+
+            var newVersion = new DocumentVersion
+            {
+                DocumentId = doc.Id,
+                VersionNumber = nextVersionNumber,
+                DiffBaseVersionId = doc.CurrentVersionId == 0 ? null : doc.CurrentVersionId,
+
                 ObjectKey = objectKey,
-                ContentType = "application/pdf", //enforce PDF type in metadata
-                SizeBytes = file.Length,
-                CreatedAt = DateTime.UtcNow
+                ContentType = "application/pdf",
+                SizeBytes = file.Length
             };
 
-            _db.Documents.Add(doc);
+            _db.DocumentVersions.Add(newVersion);
             await _db.SaveChangesAsync();
+
+            doc.CurrentVersionId = newVersion.Id;
+            await _db.SaveChangesAsync();
+
+            await tx.CommitAsync();
 
             try
             { 
                 var msg = new UploadedDocMessage(
                     doc.Id,
+                    newVersion.Id,
                     Bucket: "documents", //or read from config
                     objectKey,
                     doc.FileName!,
-                    doc.ContentType ?? "application/pdf");
+                    "application/pdf");
 
                 _mq.PublishTo(JsonSerializer.Serialize(msg), QueueNames.Documents);
                 _logger.LogInformation("Published upload message for document id {Id} to {Queue}", doc.Id, QueueNames.Documents);
@@ -122,7 +183,14 @@ public class DocumentsController : ControllerBase, IDocumentsController
             }
 
             _logger.LogInformation("Uploaded document saved (id: {Id}, key: {Key})", doc.Id, objectKey);
-            return CreatedAtAction(nameof(GetDocById), new { id = doc.Id }, doc);
+            return CreatedAtAction(nameof(GetDocById), new { id = doc.Id }, new
+            {
+                doc.Id,
+                doc.FileName,
+                CurrentVersionId = doc.CurrentVersionId,
+                VersionCreated = newVersion.Id,
+                newVersion.VersionNumber
+            });
         }
         catch (Minio.Exceptions.MinioException mex)
         {
@@ -159,33 +227,35 @@ public class DocumentsController : ControllerBase, IDocumentsController
     {
         try
         {
-            var doc = await _db.Documents.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id);
+            var doc = await _db.Documents
+                .AsNoTracking()
+                .Include(d => d.Versions)
+                .FirstOrDefaultAsync(d => d.Id == id);
+
             if (doc == null)
             {
                 _logger.LogInformation("Document {Id} not found", id);
                 return NotFound();
             }
-
-            try
-            {
-                var url = _storage.GetPresignedGetUrl(doc.ObjectKey, TimeSpan.FromMinutes(10));
-                var result = new
+                return Ok(new
                 {
                     doc.Id,
                     doc.FileName,
-                    doc.ContentType,
-                    doc.SizeBytes,
                     doc.CreatedAt,
-                    doc.ObjectKey,
-                    DownloadUrl = url
-                };
-                return Ok(result);
-            }
-            catch (Exception urlEx)
-            {
-                _logger.LogWarning(urlEx, "Failed to generate presigned URL for object {Key}", doc.ObjectKey);
-                return Ok(doc);
-            }
+                    doc.CurrentVersionId,
+                    Versions = doc.Versions
+                        .OrderByDescending(v => v.VersionNumber)
+                        .Select(v => new
+                            {
+                            v.Id,
+                            v.VersionNumber,
+                            v.DiffBaseVersionId,
+                            v.SizeBytes,
+                            v.Tag,
+                            v.SummarizedContent,
+                            v.ChangeSummary
+                            })
+                        });
         }
         catch (Exception ex)
         {
@@ -195,7 +265,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
     }
 
     [HttpGet("{id:int}/download")]
-    public async Task<IActionResult> Download(int id)
+    public async Task<IActionResult> DownloadCurrent(int id)
     {
         try
         {
@@ -206,8 +276,14 @@ public class DocumentsController : ControllerBase, IDocumentsController
                 return NotFound();
             }
 
-            var stream = await _storage.GetObjectAsync(doc.ObjectKey);
-            return File(stream, doc.ContentType ?? "application/pdf", doc.FileName);
+            var version = await _db.DocumentVersions.AsNoTracking()
+                .FirstOrDefaultAsync(v => v.Id == doc.CurrentVersionId);
+
+            if (version == null) return NotFound("Current Version not found.");
+
+            var stream = await _storage.GetObjectAsync(version.ObjectKey);
+
+            return File(stream, "application/pdf", doc.FileName);
         }
         catch (Minio.Exceptions.MinioException mex)
         {
@@ -226,33 +302,69 @@ public class DocumentsController : ControllerBase, IDocumentsController
     {
         try
         {
-            var doc = await _db.Documents.FindAsync(id);
+            // Load document + versions (we need object keys)
+            var doc = await _db.Documents
+                .Include(d => d.Versions)
+                .FirstOrDefaultAsync(d => d.Id == id);
+
             if (doc == null)
             {
                 _logger.LogInformation("Document {Id} not found for deletion", id);
                 return NotFound();
             }
 
-            try
+            // 1) Try to remove all objects from MinIO (best-effort, but track failures)
+            var failedKeys = new List<string>();
+
+            foreach (var v in doc.Versions)
             {
-                await _storage.RemoveObjectAsync(doc.ObjectKey);
-                _logger.LogInformation("Removed object {Key} from storage for document {Id}", doc.ObjectKey, id);
-            }
-            catch (Exception storageEx)
-            {
-                _logger.LogError(storageEx, "Failed to remove object {Key} from storage for document {Id}", doc.ObjectKey, id);
-                return StatusCode(StatusCodes.Status502BadGateway, "Failed to remove object from storage");
+                if (string.IsNullOrWhiteSpace(v.ObjectKey))
+                    continue;
+
+                try
+                {
+                    await _storage.RemoveObjectAsync(v.ObjectKey);
+                    _logger.LogInformation(
+                        "Removed object {Key} from storage for document {DocId} version {VersionId}",
+                        v.ObjectKey, id, v.Id);
+                }
+                catch (Exception ex)
+                {
+                    failedKeys.Add(v.ObjectKey);
+                    _logger.LogError(ex,
+                        "Failed to remove object {Key} for document {DocId} version {VersionId}",
+                        v.ObjectKey, id, v.Id);
+                }
             }
 
+            // If you want strict behavior: abort if ANY MinIO delete failed.
+            // Otherwise you can still delete DB and just report partial failure.
+            if (failedKeys.Count > 0)
+            {
+                return StatusCode(StatusCodes.Status502BadGateway,
+                    $"Failed to remove {failedKeys.Count} object(s) from storage. " +
+                    $"Aborting DB deletion to avoid orphaned objects. Keys: {string.Join(", ", failedKeys)}");
+            }
+
+            // 2) DB delete inside a transaction
+            await using var tx = await _db.Database.BeginTransactionAsync();
+
+            // Delete versions first (or rely on cascade, but explicit is safer for demos)
+            _db.DocumentVersions.RemoveRange(doc.Versions);
+
+            // Then delete document
             _db.Documents.Remove(doc);
+
             var changes = await _db.SaveChangesAsync();
+            await tx.CommitAsync();
+
             if (changes == 0)
             {
                 _logger.LogWarning("No DB changes when deleting document {Id}", id);
                 return StatusCode(StatusCodes.Status500InternalServerError, "Failed to delete document record");
             }
 
-            _logger.LogInformation("Deleted document {Id} and its object {Key}", id, doc.ObjectKey);
+            _logger.LogInformation("Deleted document {Id} and all versions ({Count})", id, doc.Versions.Count);
             return Ok("successfully removed");
         }
         catch (DbUpdateException dbEx)
@@ -266,6 +378,7 @@ public class DocumentsController : ControllerBase, IDocumentsController
             return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error");
         }
     }
+
 
     [HttpGet("search")]
     public async Task<IActionResult> ElasticSearch([FromQuery] string query)

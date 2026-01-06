@@ -20,9 +20,6 @@ public interface IRabbitConsumerService
     Task StopAsync(System.Threading.CancellationToken cancellationToken);
 }
 
-public record UploadedDocMessage(int DocumentId, string Bucket, string ObjectKey, string FileName, string ContentType);
-
-
 public class OcrConsumerService : BackgroundService, IRabbitConsumerService
 {
     private readonly ILogger<OcrConsumerService> _logger;
@@ -103,7 +100,7 @@ public class OcrConsumerService : BackgroundService, IRabbitConsumerService
             try
             {
                 var message = Encoding.UTF8.GetString(ea.Body.ToArray());
-                var payload = JsonSerializer.Deserialize<UploadedDocMessage>(message)!;
+                var payload = JsonSerializer.Deserialize<VersionPipelineMessage>(message)!;
                 await ProcessAsync(payload, stoppingToken);
 
                 _channel.BasicAck(ea.DeliveryTag, multiple: false);
@@ -170,10 +167,24 @@ public class OcrConsumerService : BackgroundService, IRabbitConsumerService
         return output;
     }
 
-    public async Task ProcessAsync(UploadedDocMessage payload, CancellationToken ct)
+    public async Task ProcessAsync(VersionPipelineMessage payload, CancellationToken ct)
     {
+        _logger.LogInformation("OCR worker processing doc={DocId} ver={VerId} key={Key}",
+            payload.DocumentId, payload.DocumentVersionId, payload.ObjectKey);
+
         var path = await _fetcher.FetchToTempFileAsync(payload.Bucket, payload.ObjectKey, payload.FileName, ct);
+
         var text = await _ocr.ExtractAsync(path, payload.ContentType, ct);
-        await _sink.OnOcrCompletedAsync(payload.DocumentId, text, ct);
+
+        _logger.LogInformation("OCR extracted {Len} chars for doc={DocId} ver={VerId}",
+            text?.Length ?? 0, payload.DocumentId, payload.DocumentVersionId);
+
+        await _sink.OnOcrCompletedAsync(
+            payload.DocumentId,
+            payload.DocumentVersionId,
+            payload.DiffBaseVersionId,   // if you added it to the pipeline message
+            text ?? "",
+            ct);
     }
+
 }

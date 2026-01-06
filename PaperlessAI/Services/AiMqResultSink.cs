@@ -46,12 +46,19 @@ namespace PaperlessAI.Services
                 arguments: null);
         }
 
-        public Task OnGeminiCompletedAsync(int documentId, string summarizedText, DocumentTag tag, string ocrText, CancellationToken ct)
+        public Task OnGeminiCompletedAsync(int documentId, int documentVersionId, string summarizedText, DocumentTag tag, string ocrText, string changeSummary, CancellationToken ct)
         {
             try
             {
-                var message = new MessageTransferObject { DocumentId = documentId, OcrText = ocrText , Tag = tag, Summary = summarizedText};
-                var payload = JsonSerializer.Serialize<MessageTransferObject>(message);
+                var message = new GenAiCompletedMessage(
+                    documentId,
+                    documentVersionId,
+                    summarizedText,
+                    tag,
+                    ocrText,
+                    changeSummary);
+
+                var payload = JsonSerializer.Serialize<GenAiCompletedMessage>(message);
                 var body = Encoding.UTF8.GetBytes(payload);
 
                 if(ct.IsCancellationRequested)

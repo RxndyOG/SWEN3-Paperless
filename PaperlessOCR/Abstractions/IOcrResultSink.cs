@@ -8,6 +8,6 @@ namespace PaperlessOCR.Abstractions
 {
     public interface IOcrResultSink
     {
-        Task OnOcrCompletedAsync(int documentId, string text, CancellationToken ct);
+        Task OnOcrCompletedAsync(int documentId, int documentVersionId, int? diffBaseVersionId, string text, CancellationToken ct);
     }
 }
