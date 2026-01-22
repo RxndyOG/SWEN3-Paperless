@@ -80,6 +80,26 @@ services:
       timeout: 5s
       retries: 5
     restart: on-failure
+
+  
+  batchworker:
+    build:
+        context: .
+        dockerfile: Paperless.Batch/Dockerfile
+    container_name: access-batch-processor
+    depends_on:
+      - postgres
+    environment:
+      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
+
+      Batch__InputFolder: "/app/input"
+      Batch__ArchiveFolder: "/app/archive"
+      Batch__FilePattern: "access-*.xml"
+      Batch__PollSeconds: "60"
+    volumes:
+      - ./batch-input:/app/input
+      - ./batch-archive:/app/archive
+    restart: unless-stopped
         
   rest:
     build: 

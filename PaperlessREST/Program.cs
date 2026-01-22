@@ -17,7 +17,7 @@ builder.WebHost.ConfigureKestrel(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddSingleton<RestQueueService>();
+builder.Services.AddSingleton<IMessageQueueService, RestQueueService>();
 
 builder.Services.AddSingleton<IObjectStorage>(sp =>
 {
@@ -56,8 +56,10 @@ builder.Services.AddHttpClient<IElasticService, ElasticService>()
                 HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
         });
 
-builder.Services.AddHostedService<RestConsumerService>();
-
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddHostedService<RestConsumerService>();
+}
 
 builder.Services.AddControllers();
 var app = builder.Build();
@@ -71,3 +73,5 @@ using (var scope = app.Services.CreateScope())
 
 app.MapControllers();
 app.Run();
+
+public partial class Program { }

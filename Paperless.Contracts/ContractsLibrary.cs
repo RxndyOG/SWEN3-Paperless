@@ -75,6 +75,14 @@ namespace Paperless.Contracts
         public required string OutputQueue { get; set; }
     }
 
+    public class BatchOptions
+    {
+        public string InputFolder { get; set; } = "";
+        public string ArchiveFolder { get; set; } = "";
+        public string FilePattern { get; set; } = "";
+        public string PollSeconds { get; set; } = "";
+    }
+
     public class ElasticOptions     {
         public string Uri { get; set; } = "";
         public string Index { get; set; } = "";
