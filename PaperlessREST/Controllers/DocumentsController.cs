@@ -32,15 +32,15 @@ public class DocumentsController : ControllerBase, IDocumentsController
     private readonly AppDbContext _db;
     private readonly ILogger<DocumentsController> _logger;
     private readonly IObjectStorage _storage;
-    private readonly RestQueueService _mq;
+    private readonly IMessageQueueService _mq;
     private readonly IElasticService _elastic;
 
     public DocumentsController(
-        AppDbContext db,
-        ILogger<DocumentsController> logger,
-        IObjectStorage storage,
-        RestQueueService mq,
-        IElasticService elastic)
+    AppDbContext db,
+    ILogger<DocumentsController> logger,
+    IObjectStorage storage,
+    IMessageQueueService mq,
+    IElasticService elastic)
     {
         _db = db;
         _logger = logger;

@@ -5,6 +5,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+	<PropertyGroup>
+		<PreserveCompilationContext>true</PreserveCompilationContext>
+	</PropertyGroup>
+
   <!-- hard exclude non-C# files that sometimes get globbed -->
   <ItemGroup>
     <Compile Remove="Dockerfile" />
