@@ -69,7 +69,6 @@ appsettings.json
 appsettings.Development.json
 
 # Entity Framework
-Migrations/
 
 # Sonstige Tools
 _ReSharper*/
