@@ -112,7 +112,7 @@ BATCH --> FS
 
 ### AI Worker
 
-- Uses Google Gemini to summarize and classify OCR text
+- Uses Google Gemini to summarize, classify OCR text and describes changes between document versions
 
 - Emits enriched document metadata
 
@@ -139,6 +139,88 @@ BATCH --> FS
 - Elasticsearch – full-text search
 
 ---
+
+## Additional Use Case – Document Versioning & AI-Powered Change Summaries
+
+Paperless supports document versioning as an additional use case that goes beyond simple file storage.
+
+When a document with the same filename is uploaded multiple times, the system does not overwrite the existing document.
+Instead, it creates a new version that is linked to the original document and processed independently through the pipeline.
+
+### Functional Description
+
+- A document is uniquely identified by its filename.
+
+- Uploading a file with an existing filename creates a new document version.
+
+- Each version:
+
+  - stores its own binary file in MinIO
+
+  - has its own OCR result
+
+  - is summarized and classified independently
+
+- The document always points to a current version, which can be changed explicitly.
+
+- Older versions remain accessible for inspection or download.
+
+## AI-Powered Change Summaries
+
+To provide additional value beyond basic versioning, Paperless integrates AI-generated change summaries:
+
+- When a new version is uploaded:
+
+  - it references the previous version as its DiffBaseVersion
+
+- After OCR processing, the AI worker:
+
+  - compares the extracted text of the new version with the base version
+
+  - generates a natural-language change summary
+
+  - assigns an updated semantic tag
+
+The change summary is stored alongside the version metadata and can be displayed in the UI or retrieved via the API.
+
+This allows users to quickly understand what changed between versions without manually comparing documents.
+
+## Architectural Workflow
+
+```mermaid
+graph LR
+
+Client -->|Upload PDF| REST
+
+REST -->|Create or reuse Document| DB
+REST -->|Create new DocumentVersion| DB
+REST -->|Store object| MINIO
+REST -->|Publish version message| RABBITMQ
+
+RABBITMQ -->|documents| OCRW
+OCRW -->|OCR text| RABBITMQ
+
+RABBITMQ -->|ocr_finished| AIW
+AIW -->|Generate summary + diff| RABBITMQ
+
+RABBITMQ -->|genai_finished| RESTC
+RESTC -->|Update version metadata| DB
+
+```
+
+### Key Design Decisions
+
+- Versioning is immutable
+Once created, versions are never modified or deleted implicitly. This ensures auditability.
+
+- Asynchronous processing
+OCR and AI summarization are handled asynchronously via RabbitMQ to keep uploads responsive.
+
+- Loose coupling
+The REST API is not aware of OCR or AI implementation details; it only publishes events.
+
+- Extensibility
+Additional version-based features (e.g. semantic diffing, rollback, statistics) can be added without changing the core upload flow.
 
 ## Batch Processing – Access Statistics
 

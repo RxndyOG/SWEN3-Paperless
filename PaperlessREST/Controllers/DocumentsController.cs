@@ -1,16 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using PaperlessREST.Data;
-using PaperlessREST.Models;
-using PaperlessREST.Services;
-using System.Text.Json;
-using Paperless.Contracts;
-using Paperless.Contracts.SharedServices;
-using System.Diagnostics;
-using Paperless.REST.Models;
-using System.Runtime.InteropServices.Marshalling;
+using PaperlessREST.Services.Documents;
 
 namespace PaperlessREST.Controllers;
 
@@ -18,463 +9,268 @@ public interface IDocumentsController
 {
     Task<IActionResult> GetAll();
     Task<IActionResult> Upload([FromForm] IFormFile file);
-    Task<IActionResult> GetDocById(int id);
+    Task<IActionResult> GetDocById(int id, CancellationToken ct);
     Task<IActionResult> DeleteDocById(int id);
     Task<IActionResult> ElasticSearch(string query);
 }
-
-
 
 [ApiController]
 [Route("api/[controller]")]
 public class DocumentsController : ControllerBase, IDocumentsController
 {
-    private readonly AppDbContext _db;
+    private readonly IDocumentService _docs;
     private readonly ILogger<DocumentsController> _logger;
-    private readonly IObjectStorage _storage;
-    private readonly IMessageQueueService _mq;
-    private readonly IElasticService _elastic;
 
-    public DocumentsController(
-    AppDbContext db,
-    ILogger<DocumentsController> logger,
-    IObjectStorage storage,
-    IMessageQueueService mq,
-    IElasticService elastic)
+    public DocumentsController(IDocumentService docs, ILogger<DocumentsController> logger)
     {
-        _db = db;
+        _docs = docs;
         _logger = logger;
-        _storage = storage;
-        _mq = mq;
-        _elastic = elastic;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
+        _logger.LogInformation("GET /api/documents requested");
+        var res = await _docs.GetAllAsync(HttpContext.RequestAborted);
+        _logger.LogInformation("GET /api/documents returned {Count} documents", res?.Count() ?? 0);
+        return Ok(res);
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetDocById(int id, CancellationToken ct)
+    {
+        _logger.LogInformation("GET /api/documents/{Id} requested", id);
+
+        var doc = await _docs.GetByIdAsync(id, ct);
+
+        if (doc is null)
+        {
+            _logger.LogWarning("Document {Id} not found", id);
+            return NotFound();
+        }
+
+        _logger.LogInformation("Document {Id} returned successfully", id);
+        return Ok(doc);
+    }
+
+    [HttpPost]
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    public async Task<IActionResult> Upload([FromForm] IFormFile file)
+    {
+        if (file is null || file.Length == 0)
+        {
+            _logger.LogWarning("Upload rejected: file was null or empty");
+            return BadRequest("File is required.");
+        }
+
+        var isPdf =
+            file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase) ||
+            file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
+
+        if (!isPdf)
+        {
+            _logger.LogWarning(
+                "Upload rejected: not a PDF. FileName={FileName}, ContentType={ContentType}",
+                file.FileName, file.ContentType);
+            return BadRequest("Only PDF files are accepted.");
+        }
+
+        _logger.LogInformation(
+            "Upload accepted: FileName={FileName}, Size={SizeBytes}, ContentType={ContentType}",
+            file.FileName, file.Length, file.ContentType);
+
         try
         {
-            var docs = await _db.Documents
-                .AsNoTracking()
-                .Select(d => new
+            var result = await _docs.UploadAsync(file, HttpContext.RequestAborted);
+
+            _logger.LogInformation(
+                "Upload completed: DocumentId={DocumentId}, CurrentVersionId={CurrentVersionId}, VersionNumber={VersionNumber}",
+                result.DocumentId, result.CurrentVersionId, result.VersionNumber);
+
+            return CreatedAtAction(
+                nameof(GetDocById),
+                new { id = result.DocumentId },
+                new
                 {
-                    d.Id,
-                    d.FileName,
-                    d.CreatedAt,
-                    d.CurrentVersionId,
-                    Current = _db.DocumentVersions
-                        .Where(v => v.Id == d.CurrentVersionId)
-                        .Select(v => new
-                        {
-                            v.Id,
-                            v.VersionNumber,
-                            v.SizeBytes,
-                            v.Tag,
-                            v.ChangeSummary,
-                            v.SummarizedContent
-                        })
-                        .FirstOrDefault()
-                })
-                .OrderByDescending(d => d.CreatedAt)
-                .ToListAsync();
-            return Ok(docs);
+                    id = result.DocumentId,
+                    fileName = result.FileName,
+                    currentVersionId = result.CurrentVersionId,
+                    versionCreated = result.VersionCreatedId,
+                    versionNumber = result.VersionNumber
+                });
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("Upload canceled by client. FileName={FileName}", file.FileName);
+            // 499 would be ideal but not standard in ASP.NET Core; 400/408/503 are typical.
+            return StatusCode(StatusCodes.Status400BadRequest, "Request was canceled.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to retrieve documents");
-            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to retrieve documents");
+            _logger.LogError(ex, "Unexpected error during upload. FileName={FileName}", file.FileName);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error while uploading document");
         }
-    }
-
-    [HttpGet("versions/{versionId:int}/ocr")]
-    public async Task<IActionResult> GetVersionOcr(int versionId)
-    {
-        var v = await _db.DocumentVersions
-            .AsNoTracking()
-            .Where(x => x.Id == versionId)
-            .Select(x => new { x.Id, OcrText = x.Content })
-            .FirstOrDefaultAsync();
-
-        if (v == null) return NotFound();
-        return Ok(v);
     }
 
     [HttpGet("{id:int}/versions")]
     public async Task<IActionResult> GetVersions(int id)
     {
-        var doc = await _db.Documents.AsNoTracking()
-            .Where(d => d.Id == id)
-            .Select(d => new
-            {
-                d.Id,
-                d.FileName,
-                d.CurrentVersionId,
-                Versions = d.Versions
-                    .OrderByDescending(v => v.VersionNumber)
-                    .Select(v => new
-                    {
-                        v.Id,
-                        v.VersionNumber,
-                        v.SizeBytes,
-                        v.ContentType,
-                        v.Tag,
-                        v.SummarizedContent,
-                        v.ChangeSummary,
-                        v.DiffBaseVersionId
-                    })
-                    .ToList()
-            })
-            .FirstOrDefaultAsync();
+        _logger.LogInformation("GET /api/documents/{Id}/versions requested", id);
 
-        if (doc == null) return NotFound();
+        var doc = await _docs.GetVersionsAsync(id, HttpContext.RequestAborted);
+        if (doc is null)
+        {
+            _logger.LogWarning("Versions requested but document {Id} not found", id);
+            return NotFound();
+        }
+
+        _logger.LogInformation("Versions for document {Id} returned successfully", id);
         return Ok(doc);
     }
 
     [HttpGet("versions/{versionId:int}")]
     public async Task<IActionResult> GetVersion(int versionId)
     {
-        var v = await _db.DocumentVersions.AsNoTracking()
-            .Where(x => x.Id == versionId)
-            .Select(x => new
-            {
-                x.Id,
-                x.DocumentId,
-                x.VersionNumber,
-                x.Tag,
-                x.SummarizedContent,
-                x.ChangeSummary,
-                OcrText = x.Content
-            })
-            .FirstOrDefaultAsync();
+        _logger.LogInformation("GET /api/documents/versions/{VersionId} requested", versionId);
 
-        if (v == null) return NotFound();
+        var v = await _docs.GetVersionAsync(versionId, HttpContext.RequestAborted);
+        if (v is null)
+        {
+            _logger.LogWarning("Version {VersionId} not found", versionId);
+            return NotFound();
+        }
+
+        return Ok(v);
+    }
+
+    [HttpGet("versions/{versionId:int}/ocr")]
+    public async Task<IActionResult> GetVersionOcr(int versionId)
+    {
+        _logger.LogInformation("GET /api/documents/versions/{VersionId}/ocr requested", versionId);
+
+        var v = await _docs.GetVersionOcrAsync(versionId, HttpContext.RequestAborted);
+        if (v is null)
+        {
+            _logger.LogWarning("OCR requested but version {VersionId} not found", versionId);
+            return NotFound();
+        }
+
         return Ok(v);
     }
 
     [HttpGet("versions/{versionId:int}/file")]
     public async Task<IActionResult> DownloadVersion(int versionId)
     {
-        var v = await _db.DocumentVersions.AsNoTracking()
-            .Where(x => x.Id == versionId)
-            .Select(x => new { x.ObjectKey, x.ContentType })
-            .FirstOrDefaultAsync();
+        _logger.LogInformation("GET /api/documents/versions/{VersionId}/file requested", versionId);
 
-        if (v == null) return NotFound();
-
-        var stream = await _storage.GetObjectAsync(v.ObjectKey);
-        return File(stream, v.ContentType, fileDownloadName: $"version-{versionId}.pdf");
-    }
-
-    [HttpPut("{id:int}/currentVersion/{versionId:int}")]
-    public async Task<IActionResult> SetCurrentVersion(int id, int versionId)
-    {
-        var doc = await _db.Documents.FirstOrDefaultAsync(d => d.Id == id);
-        if (doc == null) return NotFound();
-
-        var exists = await _db.DocumentVersions.AnyAsync(v => v.Id == versionId && v.DocumentId == id);
-        if (!exists) return BadRequest("Version does not belong to document.");
-
-        doc.CurrentVersionId = versionId;
-        await _db.SaveChangesAsync();
-        return NoContent();
-    }
-
-    //Accept only PDF files. Stores the file in MinIO and metadata in DB.
-    [HttpPost]
-    [RequestSizeLimit(10 * 1024 * 1024)]
-    public async Task<IActionResult> Upload([FromForm] IFormFile file)
-    {
-        if (file is null || file.Length == 0)
-            return BadRequest("File is required.");
-
-        //Enforce PDF only. Accept if content-type indicates PDF or filename ends with .pdf
-        var isPdf = file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase)
-                        || file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
-        if (!isPdf) return BadRequest("Only PDF files are accepted.");
-
-        var fileName = Path.GetFileName(file.FileName);
-        var objectKey = $"{Guid.NewGuid():N}_{fileName}";
-
-        try
+        var res = await _docs.DownloadVersionAsync(versionId, HttpContext.RequestAborted);
+        if (res is null)
         {
-            _logger.LogInformation("Uploading PDF {ObjectKey} (name: {FileName}, size: {Size})", objectKey, file.FileName, file.Length);
-
-            await using var stream = file.OpenReadStream();
-            //Ensure bucket exists and put object
-            await _storage.PutObjectAsync(stream, objectKey, "application/pdf");
-
-            await using var tx = await _db.Database.BeginTransactionAsync();
-
-            var doc = await _db.Documents
-                .Include(d => d.Versions)
-                .FirstOrDefaultAsync(d => d.FileName == fileName);
-
-            if (doc == null)
-            {
-                doc = new Document
-                {
-                    FileName = fileName,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _db.Documents.Add(doc);
-                await _db.SaveChangesAsync();
-            }
-
-            var nextVersionNumber = (doc.Versions.Count == 0)
-                ? 1
-                : doc.Versions.Max(v => v.VersionNumber) + 1;
-
-            int? baseVersionId = doc.CurrentVersionId;
-
-            var newVersion = new DocumentVersion
-            {
-                DocumentId = doc.Id,
-                VersionNumber = nextVersionNumber,
-                DiffBaseVersionId = baseVersionId,
-                ObjectKey = objectKey,
-                ContentType = "application/pdf",
-                SizeBytes = file.Length
-            };
-
-            _db.DocumentVersions.Add(newVersion);
-            await _db.SaveChangesAsync();
-
-            doc.CurrentVersionId = newVersion.Id;
-            await _db.SaveChangesAsync();
-
-            await tx.CommitAsync();
-
-            try
-            {
-                var msg = new VersionPipelineMessage(
-                    DocumentId: doc.Id,
-                    DocumentVersionId: newVersion.Id,
-                    VersionNumber: newVersion.VersionNumber,
-                    DiffBaseVersionId: baseVersionId,
-                    Bucket: "documents",
-                    ObjectKey: objectKey,
-                    FileName: doc.FileName!,
-                    ContentType: "application/pdf"
-                    );
-
-                _mq.PublishTo(JsonSerializer.Serialize(msg), QueueNames.Documents);
-                _logger.LogInformation("Published upload message for document id {Id} to {Queue}", doc.Id, QueueNames.Documents);
-            }
-            catch (Exception mqEx)
-            {
-                _logger.LogWarning(mqEx, "Failed to publish message for document id {Id}", doc.Id);
-            }
-
-            _logger.LogInformation("Uploaded document saved (id: {Id}, key: {Key})", doc.Id, objectKey);
-            return CreatedAtAction(nameof(GetDocById), new { id = doc.Id }, new
-            {
-                doc.Id,
-                doc.FileName,
-                CurrentVersionId = doc.CurrentVersionId,
-                VersionCreated = newVersion.Id,
-                newVersion.VersionNumber
-            });
+            _logger.LogWarning("Download requested but version {VersionId} not found", versionId);
+            return NotFound();
         }
-        catch (Minio.Exceptions.MinioException mex)
-        {
-            _logger.LogError(mex, "Object storage error while uploading {ObjectKey}", objectKey);
-            return StatusCode(StatusCodes.Status502BadGateway, "Object storage error");
-        }
-        catch (DbUpdateException dbEx)
-        {
-            _logger.LogError(dbEx, "Database error while saving metadata for {ObjectKey}", objectKey);
 
-            //try to cleanup stored object
-            try
-            {
-                await _storage.RemoveObjectAsync(objectKey);
-                _logger.LogInformation("Rolled back stored object {ObjectKey} after DB failure", objectKey);
-            }
-            catch (Exception cleanEx)
-            {
-                _logger.LogWarning(cleanEx, "Failed to remove object {ObjectKey} after DB failure", objectKey);
-            }
-
-            return StatusCode(StatusCodes.Status500InternalServerError, "Database error while saving document metadata");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error while uploading document {FileName}", file.FileName);
-            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error while uploading document");
-        }
-    }
-
-
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetDocById(int id)
-    {
-        try
-        {
-            var doc = await _db.Documents
-                .AsNoTracking()
-                .Include(d => d.Versions)
-                .FirstOrDefaultAsync(d => d.Id == id);
-
-            if (doc == null)
-            {
-                _logger.LogInformation("Document {Id} not found", id);
-                return NotFound();
-            }
-                return Ok(new
-                {
-                    doc.Id,
-                    doc.FileName,
-                    doc.CreatedAt,
-                    doc.CurrentVersionId,
-                    Versions = doc.Versions
-                        .OrderByDescending(v => v.VersionNumber)
-                        .Select(v => new
-                            {
-                            v.Id,
-                            v.VersionNumber,
-                            v.DiffBaseVersionId,
-                            v.SizeBytes,
-                            v.Tag,
-                            v.SummarizedContent,
-                            v.ChangeSummary
-                            })
-                        });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get document {Id}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to retrieve document");
-        }
+        _logger.LogInformation("Download version {VersionId} served as {DownloadName}", versionId, res.Value.DownloadName);
+        return File(res.Value.Stream, res.Value.ContentType, res.Value.DownloadName);
     }
 
     [HttpGet("{id:int}/download")]
     public async Task<IActionResult> DownloadCurrent(int id)
     {
+        _logger.LogInformation("GET /api/documents/{Id}/download requested", id);
+
+        var res = await _docs.DownloadCurrentAsync(id, HttpContext.RequestAborted);
+        if (res is null)
+        {
+            _logger.LogWarning("Download requested but document {Id} not found", id);
+            return NotFound();
+        }
+
+        _logger.LogInformation("Download current for doc {Id} served as {DownloadName}", id, res.Value.DownloadName);
+        return File(res.Value.Stream, res.Value.ContentType, res.Value.DownloadName);
+    }
+
+    [HttpPut("{id:int}/currentVersion/{versionId:int}")]
+    public async Task<IActionResult> SetCurrentVersion(int id, int versionId)
+    {
+        _logger.LogInformation("PUT /api/documents/{Id}/currentVersion/{VersionId} requested", id, versionId);
+
         try
         {
-            var doc = await _db.Documents.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id);
-            if (doc == null)
+            var ok = await _docs.SetCurrentVersionAsync(id, versionId, HttpContext.RequestAborted);
+            if (!ok)
             {
-                _logger.LogInformation("Document {Id} not found for download", id);
+                _logger.LogWarning("SetCurrentVersion failed: document {Id} not found", id);
                 return NotFound();
             }
 
-            var version = await _db.DocumentVersions.AsNoTracking()
-                .FirstOrDefaultAsync(v => v.Id == doc.CurrentVersionId);
-
-            if (version == null) return NotFound("Current Version not found.");
-
-            var stream = await _storage.GetObjectAsync(version.ObjectKey);
-
-            return File(stream, "application/pdf", doc.FileName);
+            _logger.LogInformation("CurrentVersion updated: document {Id} -> version {VersionId}", id, versionId);
+            return NoContent();
         }
-        catch (Minio.Exceptions.MinioException mex)
+        catch (InvalidOperationException ex)
         {
-            _logger.LogError(mex, "Object storage error while downloading document {Id}", id);
-            return StatusCode(StatusCodes.Status502BadGateway, "Object storage error");
+            _logger.LogWarning(ex, "SetCurrentVersion rejected: version {VersionId} does not belong to document {Id}", versionId, id);
+            return BadRequest("Version does not belong to document.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error while downloading document {Id}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error");
+            _logger.LogError(ex, "Unexpected error in SetCurrentVersion for doc {Id}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error while setting current version");
         }
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteDocById(int id)
     {
+        _logger.LogInformation("DELETE /api/documents/{Id} requested", id);
+
         try
         {
-            var doc = await _db.Documents
-                .Include(d => d.Versions)
-                .FirstOrDefaultAsync(d => d.Id == id);
+            var (found, error) = await _docs.DeleteAsync(id, HttpContext.RequestAborted);
 
-            if (doc == null)
+            if (!found)
             {
-                _logger.LogInformation("Document {Id} not found for deletion", id);
+                _logger.LogWarning("Delete requested but document {Id} not found", id);
                 return NotFound();
             }
 
-            var failedKeys = new List<string>();
-
-            foreach (var v in doc.Versions)
+            if (error != null)
             {
-                if (string.IsNullOrWhiteSpace(v.ObjectKey))
-                    continue;
-
-                try
-                {
-                    await _storage.RemoveObjectAsync(v.ObjectKey);
-                    _logger.LogInformation(
-                        "Removed object {Key} from storage for document {DocId} version {VersionId}",
-                        v.ObjectKey, id, v.Id);
-                }
-                catch (Exception ex)
-                {
-                    failedKeys.Add(v.ObjectKey);
-                    _logger.LogError(ex,
-                        "Failed to remove object {Key} for document {DocId} version {VersionId}",
-                        v.ObjectKey, id, v.Id);
-                }
+                _logger.LogWarning("Delete aborted for doc {Id}: {Error}", id, error);
+                return StatusCode(StatusCodes.Status502BadGateway, error);
             }
 
-            if (failedKeys.Count > 0)
-            {
-                return StatusCode(StatusCodes.Status502BadGateway,
-                    $"Failed to remove {failedKeys.Count} object(s) from storage. " +
-                    $"Aborting DB deletion to avoid orphaned objects. Keys: {string.Join(", ", failedKeys)}");
-            }
-
-            await using var tx = await _db.Database.BeginTransactionAsync();
-
-            // ✅ break FK: Document -> CurrentVersion
-            doc.CurrentVersionId = null;
-            await _db.SaveChangesAsync();
-
-            _db.DocumentVersions.RemoveRange(doc.Versions);
-            _db.Documents.Remove(doc);
-
-            var changes = await _db.SaveChangesAsync();
-            await tx.CommitAsync();
-
-            if (changes == 0)
-            {
-                _logger.LogWarning("No DB changes when deleting document {Id}", id);
-                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to delete document record");
-            }
-
-            _logger.LogInformation("Deleted document {Id} and all versions ({Count})", id, doc.Versions.Count);
+            _logger.LogInformation("Document {Id} deleted successfully", id);
             return Ok("successfully removed");
-        }
-        catch (DbUpdateException dbEx)
-        {
-            _logger.LogError(dbEx, "Database error while deleting document {Id}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError, "Database error");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error while deleting document {Id}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error");
+            _logger.LogError(ex, "Unexpected error deleting document {Id}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error while deleting document");
         }
     }
-
-
 
     [HttpGet("search")]
     public async Task<IActionResult> ElasticSearch([FromQuery] string query)
     {
         if (string.IsNullOrWhiteSpace(query))
+        {
+            _logger.LogWarning("Search rejected: query was empty");
             return BadRequest("Query parameter is required.");
+        }
+
+        _logger.LogInformation("Search requested. Query='{Query}'", query);
 
         try
         {
-            var result = await _elastic.SearchAsync(query);
-            return Ok(result);
+            var res = await _docs.SearchAsync(query, HttpContext.RequestAborted);
+            _logger.LogInformation("Search completed. Query='{Query}'", query);
+            return Ok(res);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Elasticsearch search failed for query: {Query}", query);
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "Search failed. Query='{Query}'", query);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Search failed");
         }
     }
 }
