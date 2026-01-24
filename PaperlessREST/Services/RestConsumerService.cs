@@ -30,39 +30,79 @@ public class RestConsumerService : BackgroundService
         _config = config;
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var factory = new ConnectionFactory
+        while (!stoppingToken.IsCancellationRequested)
         {
-            HostName = _config["RabbitMQ:Host"],
-            UserName = _config["RabbitMQ:User"],
-            Password = _config["RabbitMQ:Pass"],
-            DispatchConsumersAsync = true,
-            AutomaticRecoveryEnabled = true,
-            NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
-        };
+            try
+            {
+                var host = _config["RabbitMQ:Host"];
+                var user = _config["RabbitMQ:User"];
+                var pass = _config["RabbitMQ:Pass"];
 
-        _conn = factory.CreateConnection();
-        _channel = _conn.CreateModel();
+                if (string.IsNullOrWhiteSpace(host) ||
+                    string.IsNullOrWhiteSpace(user) ||
+                    string.IsNullOrWhiteSpace(pass))
+                {
+                    _logger.LogWarning("RabbitMQ config missing. Host/User/Pass not set. Retrying in 5s...");
+                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                    continue;
+                }
 
-        _channel.QueueDeclare(
-            queue: QueueNames.GenAiFinished,
-            durable: false,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null);
+                var factory = new ConnectionFactory
+                {
+                    HostName = host,
+                    UserName = user,
+                    Password = pass,
+                    DispatchConsumersAsync = true,
+                    AutomaticRecoveryEnabled = true,
+                    NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
+                };
 
-        _logger.LogInformation("REST service consuming queue '{Queue}'", QueueNames.GenAiFinished);
+                _logger.LogInformation("Connecting to RabbitMQ at {Host}...", host);
 
-        var consumer = new AsyncEventingBasicConsumer(_channel);
-        consumer.Received += HandleMessageAsync;
+                _conn = factory.CreateConnection();
+                _channel = _conn.CreateModel();
 
-        _channel.BasicConsume(
-            queue: QueueNames.GenAiFinished,
-            autoAck: false,
-            consumer: consumer);
+                _channel.QueueDeclare(
+                    queue: QueueNames.GenAiFinished,
+                    durable: false,
+                    exclusive: false,
+                    autoDelete: false,
+                    arguments: null);
 
-        return Task.CompletedTask;
+                _logger.LogInformation("REST service consuming queue '{Queue}'", QueueNames.GenAiFinished);
+
+                var consumer = new AsyncEventingBasicConsumer(_channel);
+                consumer.Received += HandleMessageAsync;
+
+                _channel.BasicConsume(
+                    queue: QueueNames.GenAiFinished,
+                    autoAck: false,
+                    consumer: consumer);
+
+                // Wait until cancelled. (Consumer runs via events.)
+                await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                // normal shutdown
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "RabbitMQ consumer failed to start or crashed. Retrying in 5s...");
+                SafeClose();
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            }
+        }
+    }
+
+    private void SafeClose()
+    {
+        try { _channel?.Close(); } catch { }
+        try { _conn?.Close(); } catch { }
+        _channel = null;
+        _conn = null;
     }
 
     private async Task HandleMessageAsync(object sender, BasicDeliverEventArgs ea)
@@ -131,9 +171,14 @@ public class RestConsumerService : BackgroundService
 
             _channel?.BasicAck(ea.DeliveryTag, false);
         }
+        catch (JsonException jex)
+        {
+            _logger.LogError(jex, "Bad GenAI message JSON. Dropping message.");
+            _channel?.BasicAck(ea.DeliveryTag, false);
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to process GenAI message");
+            _logger.LogError(ex, "Failed to process GenAI message. Requeueing.");
             _channel?.BasicNack(ea.DeliveryTag, false, requeue: true);
         }
     }

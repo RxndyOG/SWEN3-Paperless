@@ -4,6 +4,7 @@ using Paperless.Contracts;
 using Paperless.Contracts.SharedServices;
 using PaperlessREST.Data;
 using PaperlessREST.Services;
+using PaperlessREST.Services.Documents;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,9 @@ builder.WebHost.ConfigureKestrel(options =>
 {
     options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB
 });
+
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+
 
 // PostgreSQL Connection
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -60,6 +64,7 @@ if (!builder.Environment.IsEnvironment("Testing"))
 {
     builder.Services.AddHostedService<RestConsumerService>();
 }
+
 
 builder.Services.AddControllers();
 var app = builder.Build();
