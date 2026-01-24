@@ -1,6 +1,7 @@
 using Npgsql;
 using System.Globalization;
 using System.Xml.Linq;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Paperless.Batch
 {
@@ -28,8 +29,12 @@ namespace Paperless.Batch
                 return;
             }
 
-            var connString = _config.GetConnectionString("ConnectionStrings__DefaultConnection")
-                ?? throw new InvalidOperationException("Missing DefaultConnection connection");
+            var connString =
+            _config.GetConnectionString("DefaultConnection")
+            ?? _config["ConnectionStrings:DefaultConnection"]
+            ?? throw new InvalidOperationException("Missing connection string: ConnectionStrings:DefaultConnection");
+
+
 
             await using var conn = new NpgsqlConnection(connString);
             await conn.OpenAsync(stoppingToken);
@@ -91,35 +96,116 @@ DO UPDATE SET ""accessCount"" = EXCLUDED.""accessCount"";
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-
             var baseDir = AppContext.BaseDirectory;
             var inputFolder = _config["Batch:InputFolder"] ?? Path.Combine(baseDir, "input");
             var archiveFolder = _config["Batch:ArchiveFolder"] ?? Path.Combine(baseDir, "archive");
             var pattern = _config["Batch:FilePattern"] ?? "access-*.xml";
-            var pollSeconds = int.TryParse(_config["Batch:PollSeconds"], out var s) ? s : 10;
 
             Directory.CreateDirectory(inputFolder);
             Directory.CreateDirectory(archiveFolder);
 
-            _logger.LogInformation("AccessBatchWorker started. Input={Input}, Archive={Archive}, Pattern={Pattern}, Poll={Poll}s",
-                        inputFolder, archiveFolder, pattern, pollSeconds); 
-            
+
+            _logger.LogInformation("CS={CS}", _config.GetConnectionString("DefaultConnection"));
+            _logger.LogInformation("Mode={Mode} PollSeconds={Poll} Input={Input} Archive={Archive} Pattern={Pattern}",
+                _config["Batch:Mode"], _config["Batch:PollSeconds"],
+                _config["Batch:InputFolder"], _config["Batch:ArchiveFolder"], _config["Batch:FilePattern"]);
+
+            var mode = (_config["Batch:Mode"] ?? "Poll").Trim(); // Poll | Daily
+            var pollSeconds = int.TryParse(_config["Batch:PollSeconds"], out var s) ? s : 10;
+
+            // Daily schedule settings
+            var runAtStr = _config["Batch:RunAt"] ?? "01:00";     // HH:mm
+            var tzId = _config["Batch:TimeZone"] ?? "Europe/Vienna";
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(tzId);
+
+            _logger.LogInformation(
+                "AccessBatchWorker started. Mode={Mode}, Input={Input}, Archive={Archive}, Pattern={Pattern}",
+                mode, inputFolder, archiveFolder, pattern);
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    var files = Directory.GetFiles(inputFolder, pattern).OrderBy(f => f).ToList();
-                    foreach (var file in files)
+                    if (mode.Equals("Daily", StringComparison.OrdinalIgnoreCase))
                     {
-                        await ProcessFile(file, archiveFolder, stoppingToken);
+                        var delay = GetDelayUntilNextRun(runAtStr, timeZone);
+                        _logger.LogInformation("Next batch run at {DelayFromNow} (RunAt={RunAt}, TZ={TZ})",
+                            delay, runAtStr, timeZone.Id);
+
+                        await Task.Delay(delay, stoppingToken);
+
+                        await RunOnce(inputFolder, archiveFolder, pattern, stoppingToken);
                     }
+
+                    else if (mode.Equals("Once", StringComparison.OrdinalIgnoreCase))
+                    {
+                        await RunOnce(inputFolder, archiveFolder, pattern, stoppingToken);
+                        _logger.LogInformation("Batch:Mode=Once finished. Exiting.");
+                        return;
+                    }
+
+                    else
+                    {
+                        // Poll mode (dev/testing)
+                        await RunOnce(inputFolder, archiveFolder, pattern, stoppingToken);
+                        await Task.Delay(TimeSpan.FromSeconds(pollSeconds), stoppingToken);
+                    }
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    // normal shutdown
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Batch loop error");
+                    // avoid tight crash loop
+                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                 }
-                await Task.Delay(TimeSpan.FromSeconds(pollSeconds), stoppingToken);
             }
         }
+
+        private async Task RunOnce(string inputFolder, string archiveFolder, string pattern, CancellationToken ct)
+        {
+            var files = Directory.GetFiles(inputFolder, pattern).OrderBy(f => f).ToList();
+
+            if (files.Count == 0)
+            {
+                _logger.LogInformation("No batch files found in {Input} (Pattern={Pattern})", inputFolder, pattern);
+                return;
+            }
+
+            _logger.LogInformation("Found {Count} batch file(s) to process", files.Count);
+
+            foreach (var file in files)
+            {
+                await ProcessFile(file, archiveFolder, ct);
+            }
+        }
+
+        private static TimeSpan GetDelayUntilNextRun(string runAtHHmm, TimeZoneInfo tz)
+        {
+            // Parse "01:00"
+            if (!TimeSpan.TryParseExact(runAtHHmm, @"hh\:mm", CultureInfo.InvariantCulture, out var runAt))
+                throw new FormatException($"Batch:RunAt must be HH:mm, got '{runAtHHmm}'");
+
+            var nowUtc = DateTimeOffset.UtcNow;
+            var nowLocal = TimeZoneInfo.ConvertTime(nowUtc, tz);
+
+            var todayRunLocal = new DateTimeOffset(
+                nowLocal.Year, nowLocal.Month, nowLocal.Day,
+                runAt.Hours, runAt.Minutes, 0,
+                nowLocal.Offset);
+
+            var nextRunLocal = (nowLocal <= todayRunLocal)
+                ? todayRunLocal
+                : todayRunLocal.AddDays(1);
+
+            var nextRunUtc = TimeZoneInfo.ConvertTime(nextRunLocal, TimeZoneInfo.Utc);
+
+            var delay = nextRunUtc - nowUtc;
+            if (delay < TimeSpan.Zero) delay = TimeSpan.Zero; // safety
+            return delay;
+        }
+
     }
 }

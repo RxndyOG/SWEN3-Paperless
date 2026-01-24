@@ -92,6 +92,7 @@ services:
     environment:
       ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
 
+      Batch__Mode: "Daily"
       Batch__InputFolder: "/app/input"
       Batch__ArchiveFolder: "/app/archive"
       Batch__FilePattern: "access-*.xml"
