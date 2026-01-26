@@ -13,7 +13,7 @@ public sealed class MinioFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        // Map random host ports → avoid conflicts.
+        // Map random host ports -> avoid conflicts.
         var minio = new ContainerBuilder()
             .WithImage("minio/minio:latest")
             .WithName($"minio-tests-{Guid.NewGuid():N}")
@@ -27,7 +27,7 @@ public sealed class MinioFixture : IAsyncLifetime
         Container = minio;
         await minio.StartAsync();
 
-        // Use "localhost" as the host for the container's mapped port.
+        // Use "localhost" as the host for the container's mapped port, instead of postgres
         var host = "localhost";
         var apiPort = minio.GetMappedPublicPort(9000);
         Endpoint = $"{host}:{apiPort}";

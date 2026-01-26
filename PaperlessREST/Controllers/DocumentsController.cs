@@ -102,7 +102,6 @@ public class DocumentsController : ControllerBase, IDocumentsController
         catch (OperationCanceledException)
         {
             _logger.LogWarning("Upload canceled by client. FileName={FileName}", file.FileName);
-            // 499 would be ideal but not standard in ASP.NET Core; 400/408/503 are typical.
             return StatusCode(StatusCodes.Status400BadRequest, "Request was canceled.");
         }
         catch (Exception ex)

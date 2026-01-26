@@ -15,7 +15,7 @@ public class MinioStorageTests : IClassFixture<MinioFixture>
         var cfg = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["MinIO:Endpoint"] = _fx.Endpoint,      // like "127.0.0.1:54321"
+                ["MinIO:Endpoint"] = _fx.Endpoint,      // 127.0.0.1:54321
                 ["MinIO:AccessKey"] = _fx.AccessKey,
                 ["MinIO:SecretKey"] = _fx.SecretKey,
                 ["MinIO:Bucket"] = _fx.Bucket,

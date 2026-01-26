@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Paperless.Contracts;
 
 namespace PaperlessREST.Services.Documents;
 
@@ -18,8 +19,15 @@ public interface IDocumentService
     Task<object?> GetVersionOcrAsync(int versionId, CancellationToken ct);
 
     Task<bool> SetCurrentVersionAsync(int docId, int versionId, CancellationToken ct);
+    Task<ConsumeOutcome> ApplyGenAiResultAsync(GenAiCompletedMessage msg,  CancellationToken ct);
 
     Task<(bool Found, string? Error)> DeleteAsync(int docId, CancellationToken ct);
 
     Task<IEnumerable<Paperless.Contracts.MessageTransferObject>> SearchAsync(string query, CancellationToken ct);
+}
+
+public enum ConsumeOutcome
+{
+    Ack,        //processed or dropped
+    Requeue     //transient failure -> rety
 }

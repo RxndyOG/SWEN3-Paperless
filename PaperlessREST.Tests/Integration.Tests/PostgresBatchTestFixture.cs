@@ -33,6 +33,7 @@ public static class BatchSchema
         await using var conn = new NpgsqlConnection(cs);
         await conn.OpenAsync(ct);
 
+        //raw sql
         var sql = @"
 CREATE TABLE IF NOT EXISTS ""Documents"" (
   ""Id"" SERIAL PRIMARY KEY,
