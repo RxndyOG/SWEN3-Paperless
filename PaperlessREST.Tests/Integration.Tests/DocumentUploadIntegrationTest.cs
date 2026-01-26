@@ -29,7 +29,7 @@ public class DocumentUploadIntegrationTest : IClassFixture<TestWebAppFactory>
 
         var client = _factory.CreateClient();
 
-        // Two different PDF byte contents, but SAME filename (important for your versioning behavior)
+        // Two different PDF byte contents, but SAME filename
         var pdfBytesV1 = Encoding.ASCII.GetBytes("%PDF-1.4\n% v1\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF");
         var pdfBytesV2 = Encoding.ASCII.GetBytes("%PDF-1.4\n% v2 - changed\n1 0 obj\n<< /Producer (test) >>\nendobj\ntrailer\n<<>>\n%%EOF");
 
@@ -73,10 +73,10 @@ public class DocumentUploadIntegrationTest : IClassFixture<TestWebAppFactory>
             Assert.Equal(1, v1.VersionNumber);
             Assert.Equal(2, v2.VersionNumber);
 
-            // This is your "additional use case" linkage
+            // additional use-case assertion
             Assert.Equal(v1.Id, v2.DiffBaseVersionId);
 
-            // sanity: object keys should differ
+            // object keys should differ
             Assert.False(string.IsNullOrWhiteSpace(v1.ObjectKey));
             Assert.False(string.IsNullOrWhiteSpace(v2.ObjectKey));
             Assert.NotEqual(v1.ObjectKey, v2.ObjectKey);
@@ -88,7 +88,7 @@ public class DocumentUploadIntegrationTest : IClassFixture<TestWebAppFactory>
         using var form = new MultipartFormDataContent();
         var fileContent = new ByteArrayContent(pdfBytes);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
-        form.Add(fileContent, "file", fileName); // must match your controller: [FromForm] IFormFile file
+        form.Add(fileContent, "file", fileName); // must match controller: [FromForm] IFormFile file
 
         return await client.PostAsync("/api/documents", form);
     }
@@ -99,7 +99,7 @@ public class DocumentUploadIntegrationTest : IClassFixture<TestWebAppFactory>
         using var json = JsonDocument.Parse(body);
         var root = json.RootElement;
 
-        // Your controller returns:
+        // controller returns:
         // { id, fileName, currentVersionId, versionCreated, versionNumber }
         var docId = root.GetProperty("id").GetInt32();
         var currentVersionId = root.GetProperty("currentVersionId").GetInt32();

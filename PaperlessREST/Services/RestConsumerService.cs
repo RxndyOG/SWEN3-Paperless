@@ -4,17 +4,19 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Paperless.Contracts;
 using PaperlessREST.Data;
+using PaperlessREST.Services.Documents;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Channels;
 
 namespace PaperlessREST.Services;
 
 public class RestConsumerService : BackgroundService
 {
     private readonly ILogger<RestConsumerService> _logger;
-    private readonly IServiceProvider _services;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IConfiguration _config;
 
     private IConnection? _conn;
@@ -22,11 +24,11 @@ public class RestConsumerService : BackgroundService
 
     public RestConsumerService(
         ILogger<RestConsumerService> logger,
-        IServiceProvider services,
+        IServiceScopeFactory scopeFactory,
         IConfiguration config)
     {
         _logger = logger;
-        _services = services;
+        _scopeFactory = scopeFactory;
         _config = config;
     }
 
@@ -81,13 +83,9 @@ public class RestConsumerService : BackgroundService
                     autoAck: false,
                     consumer: consumer);
 
-                // Wait until cancelled. (Consumer runs via events.)
                 await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
             }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                // normal shutdown
-            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "RabbitMQ consumer failed to start or crashed. Retrying in 5s...");
@@ -112,71 +110,28 @@ public class RestConsumerService : BackgroundService
             var json = Encoding.UTF8.GetString(ea.Body.ToArray());
             _logger.LogInformation("REST received GenAI result: {json}", json);
 
-            var msg = JsonSerializer.Deserialize<GenAiCompletedMessage>(json);
-            if (msg == null)
+            GenAiCompletedMessage? msg;
+            try
             {
-                _logger.LogWarning("GenAI message deserialized to null. Acking.");
+                msg = JsonSerializer.Deserialize<GenAiCompletedMessage>(json);
+            }
+            catch (JsonException jex) {
+                _logger.LogError(jex, "Bad GenAI message JSON. Dropping message");
                 _channel?.BasicAck(ea.DeliveryTag, false);
                 return;
             }
 
-            if (msg.DocumentVersionId <= 0)
-            {
-                _logger.LogWarning("GenAI message missing DocumentVersionId (DocumentId={DocumentId}). Acking.", msg.DocumentId);
+            using var scope = _scopeFactory.CreateScope();
+            var docs = scope.ServiceProvider.GetRequiredService<IDocumentService>();
+
+            var outcome = await docs.ApplyGenAiResultAsync(msg!, CancellationToken.None);
+
+            if (outcome == ConsumeOutcome.Ack)
                 _channel?.BasicAck(ea.DeliveryTag, false);
-                return;
-            }
-
-            using var scope = _services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            //Update the specific version row (NOT current version!)
-            var ver = await db.DocumentVersions
-                .FirstOrDefaultAsync(v => v.Id == msg.DocumentVersionId);
-
-            if (ver == null)
-            {
-                _logger.LogWarning(
-                    "DocumentVersion {VersionId} not found for DocumentId {DocumentId}. Acking.",
-                    msg.DocumentVersionId, msg.DocumentId);
-
-                _channel?.BasicAck(ea.DeliveryTag, false);
-                return;
-            }
-
-            if (ver.DocumentId != msg.DocumentId)
-            {
-                _logger.LogWarning(
-                    "Mismatch: message DocumentId={MessageDocId} but version {VersionId} belongs to DocumentId={DbDocId}. Acking.",
-                    msg.DocumentId, ver.Id, ver.DocumentId);
-
-                _channel?.BasicAck(ea.DeliveryTag, false);
-                return;
-            }
-
-            ver.SummarizedContent = msg.Summary ?? "";
-            ver.Tag = msg.Tag;
-
-            if (!string.IsNullOrWhiteSpace(msg.OcrText))
-                ver.Content = msg.OcrText;
-
-            if (!string.IsNullOrWhiteSpace(msg.ChangeSummary))
-                ver.ChangeSummary = msg.ChangeSummary;
-
-            await db.SaveChangesAsync();
-
-            _logger.LogInformation(
-                "Updated GenAI fields for DocumentId {DocumentId}, VersionId {VersionId}",
-                msg.DocumentId, ver.Id);
-
-            _channel?.BasicAck(ea.DeliveryTag, false);
+            else
+                _channel?.BasicNack(ea.DeliveryTag, false, requeue: true);
         }
-        catch (JsonException jex)
-        {
-            _logger.LogError(jex, "Bad GenAI message JSON. Dropping message.");
-            _channel?.BasicAck(ea.DeliveryTag, false);
-        }
-        catch (Exception ex)
+        catch(Exception ex)
         {
             _logger.LogError(ex, "Failed to process GenAI message. Requeueing.");
             _channel?.BasicNack(ea.DeliveryTag, false, requeue: true);

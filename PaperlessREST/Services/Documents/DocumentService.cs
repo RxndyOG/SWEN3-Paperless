@@ -329,4 +329,48 @@ public sealed class DocumentService : IDocumentService
 
     public async Task<IEnumerable<MessageTransferObject>> SearchAsync(string query, CancellationToken ct)
         => await _elastic.SearchAsync(query);
+
+    public async Task<ConsumeOutcome> ApplyGenAiResultAsync(GenAiCompletedMessage msg,  CancellationToken ct)
+    {
+        //validation checks
+        if (msg == null)
+        {
+            _logger.LogWarning("GenAI message was null -> drop");
+            return ConsumeOutcome.Ack;
+        }
+        if (msg.DocumentVersionId <= 0)
+        {
+            _logger.LogWarning("GenAI message missing DocumentVersionId (DocumentID={DocumentId}) -> drop", msg.DocumentVersionId);
+            return ConsumeOutcome.Ack;
+        }
+
+        var ver = await _db.DocumentVersions.FirstOrDefaultAsync(v => v.Id == msg.DocumentVersionId, ct);
+
+        if (ver == null)
+        {
+            _logger.LogWarning("DocumentVersion {VersionId} not found for DocumentId {DocumentId} -> drop", msg.DocumentVersionId, msg.DocumentId);
+            return ConsumeOutcome.Ack;
+        }
+
+        if (ver.DocumentId != msg.DocumentId)
+        {
+            _logger.LogWarning("Mismatch: message DocumentId={MessageDocId} but version {VersionId} belongs to Document {DocumendId}",
+                msg.DocumentId, ver.Id, ver.DocumentId);
+            return ConsumeOutcome.Ack;
+        }
+
+        //update fields
+        ver.SummarizedContent = msg.Summary ?? "";
+        ver.Tag = msg.Tag;
+
+        if (!string.IsNullOrWhiteSpace(msg.OcrText))
+            ver.Content = msg.OcrText;
+        if (!string.IsNullOrWhiteSpace(msg.Summary))
+            ver.ChangeSummary = msg.Summary;
+
+        await _db.SaveChangesAsync(ct);
+
+        _logger.LogInformation("Applied GenAI fields for DocumentId {DocumentId}, VersionId {VersionId}", msg.DocumentId, msg.DocumentVersionId);
+        return ConsumeOutcome.Ack;
+    }
 }

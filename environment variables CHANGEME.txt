@@ -1,0 +1,69 @@
+# DO NOT COMMIT - local development secrets for docker-compose
+# CHANGE THESE VARIABLES AND RENAME TILE TO .env TO WORK
+
+# postgres
+POSTGRES_PASSWORD=*your info here*
+POSTGRES_USER=*your info here*
+POSTGRES_DB=*your info here*
+
+# rabbitmq
+RABBITMQ_DEFAULT_USER=*your info here*
+RABBITMQ_DEFAULT_PASS=*your info here*
+RABBITMQ_USER=*your info here*
+RABBITMQ_PASS=*your info here*
+
+# minio
+MINIO_ROOT_USER=*your info here*
+MINIO_ROOT_PASSWORD=*your info here*
+MINIO__ACCESSKEY=*your info here*
+MINIO__SECRETKEY=*your info here*
+
+# .NET app settings (example)
+ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=*your info here*;Username=*your info here*;Password=*your info here*
+
+#Google Gemini API
+GEMINI_API_KEY=*your info here*
+
+
+
+# Project namespace (defaults to the current folder name if not set)
+#COMPOSE_PROJECT_NAME=myproject
+
+
+# Password for the 'elastic' user (at least 6 characters)
+ELASTIC_PASSWORD=changeme
+
+
+# Password for the 'kibana_system' user (at least 6 characters)
+KIBANA_PASSWORD=changeme
+
+
+# Version of Elastic products
+STACK_VERSION=8.7.1
+
+
+# Set the cluster name
+CLUSTER_NAME=docker-cluster
+
+
+# Set to 'basic' or 'trial' to automatically start the 30-day trial
+LICENSE=basic
+#LICENSE=trial
+
+
+# Port to expose Elasticsearch HTTP API to the host
+ES_PORT=9200
+
+
+# Port to expose Kibana to the host
+KIBANA_PORT=5601
+
+
+# Increase or decrease based on the available host memory (in bytes)
+ES_MEM_LIMIT=1073741824
+KB_MEM_LIMIT=1073741824
+LS_MEM_LIMIT=1073741824
+
+
+# SAMPLE Predefined Key only to be used in POC environments
+ENCRYPTION_KEY=c34d38b3a14956121ff2170e5030b471551370178f43e5626eec58b04a30fae2
